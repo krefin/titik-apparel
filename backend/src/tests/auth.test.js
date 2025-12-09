@@ -26,4 +26,11 @@ describe("Auth Routes", () => {
     expect(res.body.success).toBe(true);
     expect(res.body.token).toBeDefined();
   });
+  it("should logout user", async () => {
+    const res = await request(app).post("/api/auth/logout");
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.message).toBe("Logged out successfully");
+  });
 });

@@ -25,6 +25,7 @@ export const updateItem = async (req, res, next) => {
   try {
     const { itemId } = req.params;
     const { quantity } = req.body;
+    console.log(req.body);
     const item = await cartService.updateCartItem(Number(itemId), quantity);
     res.json({ success: true, data: item });
   } catch (err) {

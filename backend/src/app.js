@@ -7,12 +7,28 @@ import paymentRoutes from "./routes/payment.js";
 import adminStatsRoutes from "./routes/adminStats.js";
 import authRoutes from "./routes/auth.js";
 import cartRoutes from "./routes/cart.js";
+import cookieParser from "cookie-parser";
 
 const app = express();
 
-app.use(cors());
+const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || "http://localhost:3000";
+
+// --- PASANG cookieParser SEBELUM ROUTES ---
+app.use(cookieParser());
+app.use(
+  cors({
+    origin: CLIENT_ORIGIN, // hanya izinkan origin ini
+    credentials: true, // penting agar cookie dikirim/diterima
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "Accept"],
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
+  })
+);
+
 app.use(helmet());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 app.use("/api/admin/stats", adminStatsRoutes);
 app.use("/api/products", productRoutes);
