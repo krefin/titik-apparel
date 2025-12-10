@@ -55,9 +55,9 @@ export default function Navbar() {
             <Link href="/cart" className="text-gray-700 text-lg">
               <ShoppingCart />
             </Link>
-            <span className="text-sm text-gray-700">
+            <Link href="/profile" className="text-sm text-gray-700">
               {user.name ?? user.email}
-            </span>
+            </Link>
             <LogoutButton />
           </div>
         ) : (

@@ -114,12 +114,37 @@ export async function clearCart() {
   }
 }
 
-// --- CHECKOUT ---
+/**
+ * Create order on backend (POST /api/orders).
+ * Backend requires auth (authMiddleware) — axios should send cookie or Authorization header.
+ * Returns axios response (res) so FE can normalize shape.
+ */
+export async function createOrder(payload: any) {
+  // payload: { items, address, paymentMethod, courier, ... }
+  const res = await api.post("/api/orders", payload, {
+    withCredentials: true,
+  });
+  return res; // return full axios response so caller can inspect res.data or res.data.data
+}
+
+/**
+ * Request server to create a Midtrans snap token for an existing order.
+ * BE route: POST /api/payment/token  (requires auth and expects { orderId } in body)
+ * The setOrderFromBody middleware will load the order and paymentService will create token server-side.
+ */
+export async function getPaymentToken(orderId: number | string) {
+  const res = await api.post(
+    "/api/payment/token",
+    { orderId },
+    { withCredentials: true }
+  );
+  return res; // return full response
+}
+
+/**
+ * (Optional) wrapper used previously
+ */
 export async function checkout(payload: any) {
-  try {
-    const res = await api.post("/api/cart/checkout", payload);
-    return res.data;
-  } catch (err) {
-    throw err;
-  }
+  // If you keep using checkout(payload) as a single-step, you can actually call createOrder underneath:
+  return createOrder(payload);
 }

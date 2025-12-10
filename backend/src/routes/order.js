@@ -9,6 +9,6 @@ router.use(authMiddleware);
 router.post("/", orderController.createOrder);
 router.get("/", orderController.getOrdersByUser);
 router.get("/:id", orderController.getOrderById);
-router.patch("/:id/status", orderController.updateOrderStatus);
+router.put("/:id/status", orderController.updateOrderStatus);
 
 export default router;
