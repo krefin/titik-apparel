@@ -18,6 +18,11 @@ model User {
   name      String
   email     String   @unique
   password  String
+  telephone String?
+  address   String?
+  city      String?
+  postalCode String?
+  image     String?
   role      String   @default("customer") // "admin" | "customer"
   orders    Order[]
   Cart Cart[]
@@ -28,6 +33,8 @@ model Product {
   name      String
   price     Int
   stock     Int
+  image     String?
+  description String?
   createdAt DateTime @default(now())
   OrderItem OrderItem[]
   CartItem CartItem[]

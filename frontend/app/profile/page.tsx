@@ -4,16 +4,18 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { uploadImageApi } from "@/lib/api/image";
+import { updateUserApi } from "@/lib/api/user";
 
 type UserProfile = {
   id: string;
   name?: string;
   email?: string;
-  phone?: string;
+  telephone?: string;
   address?: string;
   city?: string;
   postalCode?: string;
-  avatarUrl?: string | null;
+  image?: string | null; // gunakan field `image`
 };
 
 export default function ProfilePage() {
@@ -33,7 +35,6 @@ export default function ProfilePage() {
   // Helper to normalize API responses: support { data: {...} } or raw object
   const normalizePayload = (resData: any) => {
     if (resData == null) return null;
-    // If wrapper like { success: true, data: { ... } }
     if (
       typeof resData === "object" &&
       "data" in resData &&
@@ -41,9 +42,21 @@ export default function ProfilePage() {
     ) {
       return resData.data;
     }
-    // otherwise assume resData itself is the user object
     return resData;
   };
+
+  // Build image src tolerant terhadap full URL atau relative path
+  function buildImageSrc(img: string | null | undefined) {
+    if (!img) return null;
+    const value = String(img);
+    if (value.startsWith("http://") || value.startsWith("https://"))
+      return value;
+
+    const base = process.env.NEXT_PUBLIC_API_IMAGE_URL ?? "";
+    const baseClean = base.replace(/\/$/, "");
+    const imgClean = value.replace(/^\//, "");
+    return baseClean ? `${baseClean}/${imgClean}` : `/${imgClean}`;
+  }
 
   useEffect(() => {
     let mounted = true;
@@ -53,8 +66,6 @@ export default function ProfilePage() {
         setError(null);
 
         const res = await axios.get("/api/auth/me", { withCredentials: true });
-
-        // If API returns wrapper { success: false, message: "..." }
         if (res.data?.success === false && res.data?.message) {
           throw new Error(res.data.message);
         }
@@ -64,20 +75,27 @@ export default function ProfilePage() {
 
         if (!mounted) return;
 
+        // Normalisasi field image (sesuaikan dengan nama field di DB: `image`)
+        const imageUrl =
+          userData?.image ??
+          userData?.avatarUrl ??
+          userData?.avatar ??
+          userData?.path ??
+          null;
+
         setUser(userData);
         setForm({
           name: userData?.name ?? "",
           email: userData?.email ?? "",
-          phone: userData?.phone ?? "",
+          telephone: userData?.telephone ?? "",
           address: userData?.address ?? "",
           city: userData?.city ?? "",
           postalCode: userData?.postalCode ?? "",
+          image: imageUrl,
         });
-        setAvatarPreview(userData?.avatarUrl ?? null);
+        setAvatarPreview(imageUrl);
       } catch (err: any) {
         console.error("Failed to load profile:", err);
-
-        // If unauthorized, redirect to login (adjust path if needed)
         const status = err?.response?.status;
         if (status === 401 || status === 403) {
           router.push("/login");
@@ -101,14 +119,13 @@ export default function ProfilePage() {
     };
   }, [router]);
 
-  // Manage avatar preview object URL
+  // Manage avatar preview object URL (local file)
   useEffect(() => {
     if (!avatarFile) return;
     const url = URL.createObjectURL(avatarFile);
     setAvatarPreview(url);
     return () => {
       URL.revokeObjectURL(url);
-      // keep existing preview if set from server until user changes
     };
   }, [avatarFile]);
 
@@ -141,52 +158,65 @@ export default function ProfilePage() {
       setSaving(true);
 
       // Upload avatar if changed
-      let avatarUrl = user?.avatarUrl ?? null;
+      // gunakan user?.image sebagai fallback
+      let avatarUrl = user?.image ?? undefined;
       if (avatarFile) {
-        const formData = new FormData();
-        formData.append("file", avatarFile);
+        const up = await uploadImageApi(avatarFile, user?.id ?? "");
+        const upData = normalizePayload(up) ?? up;
 
-        const up = await axios.post("/api/auth/upload-avatar", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-          withCredentials: true,
-        });
-
-        // Normalize upload response (support { data: { url } } or { url })
-        const upData = normalizePayload(up.data) ?? up.data;
+        // Ambil kandidat yang mungkin dikembalikan backend
         avatarUrl =
-          upData?.url ?? upData?.avatarUrl ?? upData?.path ?? avatarUrl;
+          upData?.url ??
+          upData?.path ??
+          upData?.image ??
+          upData?.avatarUrl ??
+          avatarUrl;
       }
 
       const payload = {
         name: form.name,
-        phone: form.phone,
+        telephone: form.telephone,
         address: form.address,
         city: form.city,
         postalCode: form.postalCode,
-        avatarUrl,
+        image: avatarUrl,
       };
 
-      const res = await axios.put("/api/auth/me", payload, {
-        headers: { "Content-Type": "application/json" },
-        withCredentials: true,
-      });
+      const res = await updateUserApi(user?.id ?? "", payload);
 
       if (res.data?.success === false && res.data?.message) {
         throw new Error(res.data.message);
       }
 
       const updated = normalizePayload(res.data) ?? res.data;
-      setUser(updated);
-      setForm({
-        name: updated?.name ?? form.name,
-        email: updated?.email ?? form.email,
-        phone: updated?.phone ?? form.phone,
-        address: updated?.address ?? form.address,
-        city: updated?.city ?? form.city,
-        postalCode: updated?.postalCode ?? form.postalCode,
-      });
+
+      // Normalisasi kembali field image dari respons update
+      const updatedImage =
+        updated?.image ??
+        updated?.avatarUrl ??
+        updated?.path ??
+        updated?.url ??
+        avatarUrl ??
+        null;
+
+      setUser((prev) => ({
+        ...(prev ?? {}),
+        ...(updated ?? {}),
+        image: updatedImage,
+      }));
+      setForm((prev) => ({
+        ...prev,
+        name: updated?.name ?? prev?.name,
+        email: updated?.email ?? prev?.email,
+        telephone: updated?.telephone ?? prev?.telephone,
+        address: updated?.address ?? prev?.address,
+        city: updated?.city ?? prev?.city,
+        postalCode: updated?.postalCode ?? prev?.postalCode,
+        image: updatedImage,
+      }));
       setAvatarFile(null);
-      setAvatarPreview(updated?.avatarUrl ?? avatarUrl ?? null);
+      setAvatarPreview(updatedImage ?? null);
+
       setSuccess("Perubahan tersimpan.");
     } catch (err: any) {
       console.error("Save profile failed:", err);
@@ -215,8 +245,8 @@ export default function ProfilePage() {
     );
   }
 
-  // Safe initial letter: use (user?.name ?? "U").charAt(0)
   const initial = (user?.name ?? "U").charAt(0).toUpperCase();
+  const imgSrc = buildImageSrc(avatarPreview);
 
   return (
     <main className="min-h-screen bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
@@ -224,10 +254,10 @@ export default function ProfilePage() {
         <div className="max-w-4xl mx-auto bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl shadow-sm p-8">
           <header className="flex items-center gap-6">
             <div className="w-24 h-24 rounded-full bg-slate-100 overflow-hidden flex items-center justify-center">
-              {avatarPreview ? (
+              {imgSrc ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={avatarPreview}
+                  src={imgSrc}
                   alt="avatar"
                   className="w-full h-full object-cover"
                 />
@@ -316,8 +346,8 @@ export default function ProfilePage() {
                     Telepon
                   </label>
                   <input
-                    name="phone"
-                    value={form.phone ?? ""}
+                    name="telephone"
+                    value={form.telephone ?? ""}
                     onChange={handleChange}
                     className="mt-1 block w-full rounded-md border border-slate-200 dark:border-slate-700 px-3 py-2 bg-transparent focus:outline-none focus:ring-2 focus:ring-sky-400"
                   />
@@ -384,13 +414,14 @@ export default function ProfilePage() {
                     setForm({
                       name: user?.name,
                       email: user?.email,
-                      phone: user?.phone,
+                      telephone: user?.telephone,
                       address: user?.address,
                       city: user?.city,
                       postalCode: user?.postalCode,
+                      image: user?.image,
                     });
                     setAvatarFile(null);
-                    setAvatarPreview(user?.avatarUrl ?? null);
+                    setAvatarPreview(user?.image ?? null);
                     setError(null);
                     setSuccess(null);
                   }}

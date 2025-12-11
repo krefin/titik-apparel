@@ -88,9 +88,9 @@ export const logout = async (req, res) => {
 export const me = async (req, res) => {
   try {
     // debugging logs (bisa dihapus setelah yakin)
-    console.log(">>> Request to /api/auth/me");
-    console.log(">>> req.headers.cookie:", req.headers.cookie);
-    console.log(">>> req.cookies:", req.cookies);
+    // console.log(">>> Request to /api/auth/me");
+    // console.log(">>> req.headers.cookie:", req.headers.cookie);
+    // console.log(">>> req.cookies:", req.cookies);
 
     const token = req.cookies?.token;
     if (!token) {
@@ -110,7 +110,17 @@ export const me = async (req, res) => {
 
     const user = await prisma.user.findUnique({
       where: { id: decoded.id },
-      select: { id: true, name: true, email: true, role: true },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        address: true,
+        city: true,
+        telephone: true,
+        postalCode: true,
+        image: true,
+      },
     });
 
     if (!user) {
