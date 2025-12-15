@@ -535,6 +535,19 @@ export default function CartAndCheckout() {
       setLoading(false);
     }
   }
+  function buildImageUrl(image?: string | null): string | null {
+    if (!image || !image.trim()) return null;
+
+    // jika sudah full URL (unsplash, dll) → pakai langsung
+    if (image.startsWith("http://") || image.startsWith("https://")) {
+      return image;
+    }
+
+    const base = process.env.NEXT_PUBLIC_API_IMAGE_URL;
+    if (!base) return null;
+
+    return `${base.replace(/\/$/, "")}/${image.replace(/^\//, "")}`;
+  }
 
   return (
     <div className="max-w-6xl mx-auto p-6">
@@ -566,7 +579,7 @@ export default function CartAndCheckout() {
                           {p.image ? (
                             // eslint-disable-next-line @next/next/no-img-element
                             <img
-                              src={p.image}
+                              src={buildImageUrl(p.image) ?? ""}
                               alt={p.name}
                               className="object-cover w-full h-full rounded-md"
                             />

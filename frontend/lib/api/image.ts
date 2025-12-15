@@ -24,3 +24,24 @@ export async function uploadImageApi(
     throw err;
   }
 }
+
+export async function uploadImageProduct(
+  file: File,
+  productId: string
+): Promise<ImageUploadResponse> {
+  try {
+    const formData = new FormData();
+    formData.append("image", file);
+    formData.append("productId", productId); // kirim userId
+    const res = await api.post(
+      `/api/images/upload/product/${productId}`,
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+      }
+    );
+    return res.data;
+  } catch (err) {
+    throw err;
+  }
+}

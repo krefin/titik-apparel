@@ -79,19 +79,34 @@ export default function ProductDetailPage() {
     );
   }
 
+  function buildImageUrl(image?: string | null): string | null {
+    if (!image || !image.trim()) return null;
+
+    // jika sudah full URL (unsplash, dll) → pakai langsung
+    if (image.startsWith("http://") || image.startsWith("https://")) {
+      return image;
+    }
+
+    const base = process.env.NEXT_PUBLIC_API_IMAGE_URL;
+    if (!base) return null;
+
+    return `${base.replace(/\/$/, "")}/${image.replace(/^\//, "")}`;
+  }
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-10 grid md:grid-cols-2 gap-8">
       {/* IMAGE */}
       <div className="relative w-full h-[320px] md:h-[420px] rounded-lg overflow-hidden border">
         <Image
           src={
-            product.image ??
+            buildImageUrl(product.image) ??
             "https://images.unsplash.com/photo-1512436991641-6745cdb1723f"
           }
           alt={product.name}
           fill
           className="object-cover"
           priority
+          unoptimized
         />
       </div>
 

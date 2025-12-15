@@ -7,6 +7,7 @@ import FilterSidebar from "@/components/products/filter-products"; // sesuaikan 
 import { getProducts, Product } from "@/lib/api/products";
 import { useRouter } from "next/navigation";
 import { addToCart } from "@/lib/api/cart";
+import { resolveProductImage } from "@/lib/image";
 
 export default function ProductsPage({
   initialProducts = [],
@@ -70,7 +71,9 @@ export default function ProductsPage({
         search: debouncedQuery || undefined,
         sort: sort === "default" ? undefined : (sort as "asc" | "desc"),
       });
+
       const data = res?.data ?? [];
+
       const totalRes = Number(res?.total ?? data.length ?? 0);
 
       if (replace) {
@@ -314,56 +317,66 @@ export default function ProductsPage({
 
             {!loading &&
               !error &&
-              products.map((p, i) => (
-                <article
-                  key={p.id}
-                  className="relative bg-white rounded-2xl overflow-hidden shadow hover:shadow-md transition-shadow"
-                >
-                  <div className="relative h-52 sm:h-56">
-                    <Image
-                      src={p.image ?? placeholders[i % placeholders.length]}
-                      alt={p.name}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    />
-                  </div>
+              products.map((p, i) => {
+                const { src, unoptimized } = resolveProductImage(
+                  p.image,
+                  placeholders[i % placeholders.length]
+                );
+                return (
+                  <article
+                    key={p.id}
+                    className="relative bg-white rounded-2xl overflow-hidden shadow hover:shadow-md transition-shadow"
+                  >
+                    <div className="relative h-52 sm:h-56">
+                      <Image
+                        src={src}
+                        alt={p.name}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        unoptimized={unoptimized}
+                        loading="eager"
+                      />
+                    </div>
 
-                  <div className="p-4">
-                    <h3 className="text-md font-semibold truncate">{p.name}</h3>
-                    <div className="mt-2 flex items-center justify-between">
-                      <div>
-                        <div className="text-lg font-medium">
-                          {formatRupiah(p.price)}
+                    <div className="p-4">
+                      <h3 className="text-md font-semibold truncate">
+                        {p.name}
+                      </h3>
+                      <div className="mt-2 flex items-center justify-between">
+                        <div>
+                          <div className="text-lg font-medium">
+                            {formatRupiah(p.price)}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            Stok: {p.stock}
+                          </div>
                         </div>
-                        <div className="text-xs text-gray-500">
-                          Stok: {p.stock}
+
+                        <div className="flex flex-col items-end gap-2">
+                          <button
+                            className="px-3 py-2 rounded-md bg-indigo-600 text-white text-sm shadow-sm"
+                            onClick={() => handleBuyNow(p.id ?? 0)}
+                          >
+                            Buy
+                          </button>
+                          <button
+                            className="px-3 py-2 rounded-md border border-gray-200 text-sm"
+                            onClick={() => router.push(`/products/${p.id}`)}
+                          >
+                            Detail
+                          </button>
                         </div>
                       </div>
 
-                      <div className="flex flex-col items-end gap-2">
-                        <button
-                          className="px-3 py-2 rounded-md bg-indigo-600 text-white text-sm shadow-sm"
-                          onClick={() => handleBuyNow(p.id ?? 0)}
-                        >
-                          Buy
-                        </button>
-                        <button
-                          className="px-3 py-2 rounded-md border border-gray-200 text-sm"
-                          onClick={() => router.push(`/products/${p.id}`)}
-                        >
-                          Detail
-                        </button>
+                      <div className="mt-3 text-xs text-gray-400">
+                        Ditambahkan:{" "}
+                        {new Date(p.createdAt).toLocaleDateString("id-ID")}
                       </div>
                     </div>
-
-                    <div className="mt-3 text-xs text-gray-400">
-                      Ditambahkan:{" "}
-                      {new Date(p.createdAt).toLocaleDateString("id-ID")}
-                    </div>
-                  </div>
-                </article>
-              ))}
+                  </article>
+                );
+              })}
 
             {/* sentinel untuk intersection observer (invisible) */}
             <div ref={sentinelRef} className="col-span-full h-6" />

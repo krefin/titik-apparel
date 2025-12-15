@@ -6,6 +6,7 @@ export type Product = {
   name: string;
   price: number;
   stock: number;
+  description: string;
   createdAt: string;
   image?: string;
 };
@@ -21,16 +22,23 @@ export async function getProducts(
 ): Promise<{ data: Product[]; total: number }> {
   try {
     const res = await api.get("/api/products", { params });
-    // Expected shapes:
-    // 1) { success: true, data: [...], total: 123 }
-    // 2) { data: [...], total: 123 }
-    // 3) direct array (then we infer total = array.length)
+
     const payload = res.data ?? {};
-    const data: Product[] = payload?.data ?? payload ?? [];
-    const total: number = Number(
-      payload?.total ?? (Array.isArray(data) ? data.length : 0)
-    );
-    return { data, total };
+
+    // 🔒 NORMALISASI
+    if (Array.isArray(payload)) {
+      return { data: payload, total: payload.length };
+    }
+
+    if (Array.isArray(payload.data)) {
+      return {
+        data: payload.data,
+        total: Number(payload.total ?? payload.data.length),
+      };
+    }
+
+    // fallback aman
+    return { data: [], total: 0 };
   } catch (err) {
     console.error("getProducts error:", err);
     return { data: [], total: 0 };

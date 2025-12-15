@@ -1,7 +1,10 @@
 // routes/image.js
 import express from "express";
 import { uploadSingleImage } from "../middlewares/upload.js";
-import { uploadImageController } from "../controllers/imageController.js";
+import {
+  uploadImageController,
+  uploadImageProduct,
+} from "../controllers/imageController.js";
 
 const router = express.Router();
 
@@ -27,5 +30,18 @@ router.post(
   },
   uploadImageController
 );
-
+router.post(
+  "/upload/product/:id",
+  (req, res, next) => {
+    // gunakan uploadSingleImage sebagai middleware manual agar error multer bisa ditangani
+    uploadSingleImage(req, res, (err) => {
+      if (err) {
+        // multer error -> kirim response yang jelas
+        return res.status(400).json({ success: false, message: err.message });
+      }
+      next();
+    });
+  },
+  uploadImageProduct
+);
 export default router;

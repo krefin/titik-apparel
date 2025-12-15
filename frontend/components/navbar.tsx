@@ -20,6 +20,12 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
   const { user } = useAuth();
   const router = useRouter();
+
+  // 🔴 JIKA ADMIN, SEMBUNYIKAN NAVBAR
+  if (user?.role === "admin") {
+    return null;
+  }
+
   const menus = [
     { name: "Home", href: "/" },
     { name: "Produk", href: "/products" },

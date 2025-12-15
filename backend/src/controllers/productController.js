@@ -1,12 +1,21 @@
 // src/controllers/productController.js
 import * as productService from "../services/productService.js";
 
-export const getAllProducts = async (req, res, next) => {
+export const getAllProducts = async (req, res) => {
   try {
-    const products = await productService.getAllProducts();
-    res.json({ success: true, data: products });
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 9;
+    const search = req.query.search || "";
+
+    const result = await productService.getAllProducts({
+      page,
+      limit,
+      search,
+    });
+
+    res.json(result);
   } catch (err) {
-    next(err); // dilempar ke errorHandler
+    next(err);
   }
 };
 
