@@ -5,6 +5,8 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import FilterSidebar from "@/components/products/filter-products"; // sesuaikan path
 import { getProducts, Product } from "@/lib/api/products";
+import { useRouter } from "next/navigation";
+import { addToCart } from "@/lib/api/cart";
 
 export default function ProductsPage({
   initialProducts = [],
@@ -26,6 +28,8 @@ export default function ProductsPage({
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [sort, setSort] = useState<"default" | "asc" | "desc">("default");
+
+  const router = useRouter();
 
   // placeholders
   const placeholders = [
@@ -169,6 +173,21 @@ export default function ProductsPage({
 
   // keep same layout as before — main already used as scrollable container earlier
   const headerHeight = 120; // keep as before
+
+  async function handleBuyNow(productId: number) {
+    // implementasi pembelian langsung
+    const payload = { productId, quantity: 1 };
+    // panggil API add to cart di sini
+    if (payload.productId) {
+      try {
+        await addToCart(payload);
+        router.push("/cart");
+      } catch (err) {
+        console.error("Gagal beli langsung:", err);
+        alert("Gagal membeli langsung.");
+      }
+    }
+  }
 
   return (
     <div className="max-w-7xl mx-auto p-6">
@@ -323,10 +342,16 @@ export default function ProductsPage({
                       </div>
 
                       <div className="flex flex-col items-end gap-2">
-                        <button className="px-3 py-2 rounded-md bg-indigo-600 text-white text-sm shadow-sm">
+                        <button
+                          className="px-3 py-2 rounded-md bg-indigo-600 text-white text-sm shadow-sm"
+                          onClick={() => handleBuyNow(p.id ?? 0)}
+                        >
                           Buy
                         </button>
-                        <button className="px-3 py-2 rounded-md border border-gray-200 text-sm">
+                        <button
+                          className="px-3 py-2 rounded-md border border-gray-200 text-sm"
+                          onClick={() => router.push(`/products/${p.id}`)}
+                        >
                           Detail
                         </button>
                       </div>

@@ -4,6 +4,8 @@ import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { getProducts } from "@/lib/api/products";
+import { addToCart } from "@/lib/api/cart";
+import { useRouter } from "next/navigation";
 
 type Product = {
   id: number;
@@ -19,6 +21,7 @@ export default function ProductsGrid() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   const placeholders = [
     "https://images.unsplash.com/photo-1521334884684-d80222895322",
@@ -72,6 +75,21 @@ export default function ProductsGrid() {
   if (!products.length)
     return <div className="py-8 text-center">Belum ada produk.</div>;
 
+  async function handleBuyNow(productId: number) {
+    // implementasi pembelian langsung
+    const payload = { productId, quantity: 1 };
+    // panggil API add to cart di sini
+    if (payload.productId) {
+      try {
+        await addToCart(payload);
+        router.push("/cart");
+      } catch (err) {
+        console.error("Gagal beli langsung:", err);
+        alert("Gagal membeli langsung.");
+      }
+    }
+  }
+
   return (
     <div className="wrapper flex flex-col sm:flex-row justify-between gap-6 flex-wrap">
       {products.map((p, i) => {
@@ -109,18 +127,16 @@ export default function ProductsGrid() {
               </p>
 
               <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
-                <Button className="text-xs sm:text-sm py-1 sm:py-2 px-2 sm:px-4">
-                  Buy Now
-                </Button>
                 <Button
-                  variant="outline"
                   className="text-xs sm:text-sm py-1 sm:py-2 px-2 sm:px-4"
+                  onClick={() => handleBuyNow(p.id ?? 0)}
                 >
-                  Add to Cart
+                  Buy Now
                 </Button>
                 <Button
                   variant="link"
                   className="text-xs sm:text-sm p-0 sm:p-2"
+                  onClick={() => router.push(`/products/${p.id}`)}
                 >
                   Detail
                 </Button>
