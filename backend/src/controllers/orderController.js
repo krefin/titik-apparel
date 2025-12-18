@@ -13,6 +13,23 @@ export const createOrder = async (req, res, next) => {
   }
 };
 
+export const getAllOrders = async (req, res, next) => {
+  try {
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 9;
+    const search = req.query.search || "";
+
+    const orders = await orderService.getAllOrders({
+      page,
+      limit,
+      search,
+    });
+    res.json(orders);
+  } catch (err) {
+    next(err);
+  }
+};
+
 // Ambil semua order milik user
 export const getOrdersByUser = async (req, res, next) => {
   try {

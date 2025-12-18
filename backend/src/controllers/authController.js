@@ -16,12 +16,28 @@ const cookieOptions = {
 
 export const register = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const {
+      name,
+      email,
+      password,
+      role,
+      city = "",
+      postalCode = "",
+      address = "",
+    } = req.body;
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await prisma.user.create({
-      data: { name, email, password: hashedPassword },
+      data: {
+        name,
+        email,
+        password: hashedPassword,
+        role,
+        city,
+        postalCode,
+        address,
+      },
     });
 
     return res

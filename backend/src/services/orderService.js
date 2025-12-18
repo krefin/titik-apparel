@@ -47,3 +47,45 @@ export const updateOrderStatus = async (id, status) => {
     data: { status },
   });
 };
+
+export const getAllOrders = async ({
+  page = 1,
+  limit = 10,
+  search = "",
+} = {}) => {
+  const skip = (page - 1) * limit;
+  const s = search.trim().toLowerCase();
+
+  const conditions = [];
+
+  // search numeric → id / userId
+  if (s && !isNaN(Number(s))) {
+    conditions.push({ id: Number(s) });
+    conditions.push({ userId: Number(s) });
+  }
+
+  // search status enum
+  if (["paid", "pending", "cancelled"].includes(s)) {
+    conditions.push({ status: s });
+  }
+
+  /**
+   * LOGIKA UTAMA:
+   * - search kosong → where = {}
+   * - search ada & conditions ada → OR
+   * - search ada tapi tidak valid → where = {}
+   */
+  const where = s && conditions.length > 0 ? { OR: conditions } : {};
+
+  const [data, total] = await Promise.all([
+    prisma.order.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: { id: "desc" },
+    }),
+    prisma.order.count({ where }),
+  ]);
+
+  return { data, total };
+};
