@@ -3,6 +3,7 @@ import danaService from "../services/createOrderService.js";
 export const createOrder = async (req, res) => {
   try {
     const { amount } = req.body;
+    console.log(req.body);
 
     const result = await danaService.createOrder(amount);
 

@@ -9,7 +9,7 @@ const Dana = DanaPkg.default || DanaPkg;
 /**
  * Generate waktu expiry dengan timezone GMT+7
  */
-function generateValidUpTo(minutes = 60) {
+function generateValidUpTo(minutes = 30) {
   const date = new Date(Date.now() + minutes * 60000);
 
   const year = date.getFullYear();
@@ -65,12 +65,12 @@ class DanaService {
       urlParams: [
         {
           type: "NOTIFICATION",
-          url: `${process.env.BASE_URL}/finish-payment`,
+          url: `${process.env.FRONTEND_URL}/finish-payment`,
           isDeeplink: "N",
         },
         {
           type: "PAY_RETURN",
-          url: `${process.env.BASE_URL}/payment-result`,
+          url: `${process.env.FRONTEND_URL}/payment-result`,
           isDeeplink: "N",
         },
       ],

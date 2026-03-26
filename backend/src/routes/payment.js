@@ -5,13 +5,15 @@ import {
 } from "../controllers/paymentController.js";
 import { authMiddleware } from "../middlewares/authMiddleware.js";
 import prisma from "../lib/prisma.js";
-import  { consultPay } from "../controllers/consulPayController.js";
+import { consultPay } from "../controllers/consulPayController.js";
 import { createOrder } from "../controllers/createOrderController.js";
 import { queryPayment } from "../controllers/queryPaymentController.js";
 import { cancelOrder } from "../controllers/cencelOrderController.js";
 import { refundOrder } from "../controllers/refundOrderController.js";
+import danaWebhookService from "../services/danaWebhookService.js";
 
 const router = express.Router();
+
 // Middleware untuk set req.order dari body.orderId
 export const setOrderFromBody = async (req, res, next) => {
   const { orderId } = req.body;
@@ -28,17 +30,20 @@ export const setOrderFromBody = async (req, res, next) => {
   next();
 };
 
-// gunakan di route
+// Midtrans
 router.post("/token", authMiddleware, setOrderFromBody, createPaymentToken);
-
-// menerima callback Midtrans
 router.post("/notification", paymentNotification);
 
-// dana Payment gateway
+// DANA Payment Gateway
 router.post("/consult-pay", consultPay);
 router.post("/create-order", createOrder);
 router.post("/query-payment", queryPayment);
 router.post("/cancel-order", cancelOrder);
 router.post("/refund-order", refundOrder);
+
+// ✅ DANA Finish Notify (Webhook)
+router.post("/dana/notify", (req, res) =>
+  danaWebhookService.handleFinishNotify(req, res)
+);
 
 export default router;
