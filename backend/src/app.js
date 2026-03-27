@@ -1,6 +1,8 @@
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
+import cookieParser from "cookie-parser";
+
 import productRoutes from "./routes/product.js";
 import orderRoutes from "./routes/order.js";
 import paymentRoutes from "./routes/payment.js";
@@ -9,48 +11,60 @@ import authRoutes from "./routes/auth.js";
 import cartRoutes from "./routes/cart.js";
 import userRoutes from "./routes/user.js";
 import imageRoutes from "./routes/image.js";
-import cookieParser from "cookie-parser";
-import multer from "multer";
 
-const upload = multer({ dest: "uploads/" });
+import danaWebhookService from "./services/danaWebhookService.js";
 
 const app = express();
 
 const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || "http://localhost:3000";
-const helmetOptions = {
-  // Izinkan resource statis di-serve lintas-origin
-  crossOriginResourcePolicy: { policy: "cross-origin" },
 
-  // Jika Anda punya contentSecurityPolicy custom, masukkan di sini.
-  // contentSecurityPolicy: false, // contoh: nonaktifkan CSP jika perlu debugging
-};
-// Pastikan static files mengirim Access-Control-Allow-Origin
-const staticOptions = {
-  setHeaders: (res, path) => {
-    // atur sesuai CLIENT_ORIGIN Anda; jangan gunakan '*' jika Anda mengandalkan cookie credentials
-    res.setHeader("Access-Control-Allow-Origin", CLIENT_ORIGIN);
-    // optional: izinkan beberapa header lain bila perlu
-    res.setHeader("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS");
-  },
-};
-// --- PASANG cookieParser SEBELUM ROUTES ---
+/**
+ * 🔐 BASIC SECURITY & CORS
+ */
 app.use(cookieParser());
+
 app.use(
   cors({
-    origin: CLIENT_ORIGIN, // hanya izinkan origin ini
-    credentials: true, // penting agar cookie dikirim/diterima
+    origin: CLIENT_ORIGIN,
+    credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "Accept"],
-    preflightContinue: false,
-    optionsSuccessStatus: 204,
   })
 );
 
-app.use(helmet(helmetOptions));
-app.use("/api/payment/dana/notify", express.raw({ type: "*/*" }));
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  })
+);
+
+/**
+ * 🔥 DANA WEBHOOK (WAJIB PALING ATAS & RAW BODY)
+ * ⚠️ JANGAN DIPINDAH
+ */
+app.post(
+  "/v1.0/debit/notify",
+  express.raw({ type: "application/json" }),
+  (req, res) => danaWebhookService.handleFinishNotify(req, res)
+);
+app.get("/v1.0/debit/notify", (req, res) => {
+  res.status(200).send("OK");
+});
+
+/**
+ * ❗ GLOBAL BODY PARSER (SETELAH WEBHOOK)
+ */
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use("/uploads", express.static("uploads", staticOptions));
+
+/**
+ * 📦 STATIC FILES
+ */
+app.use("/uploads", express.static("uploads"));
+
+/**
+ * 📡 API ROUTES
+ */
 app.use("/api/admin/stats", adminStatsRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/orders", orderRoutes);
@@ -59,8 +73,32 @@ app.use("/api/auth", authRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/images", imageRoutes);
+
+/**
+ * ❤️ HEALTH CHECK
+ */
 app.get("/", (req, res) => {
   res.status(200).send("OK");
+});
+
+/**
+ * ❌ 404 HANDLER
+ */
+app.use((req, res) => {
+  res.status(404).json({
+    message: "Route not found",
+  });
+});
+
+/**
+ * ❌ GLOBAL ERROR HANDLER
+ */
+app.use((err, req, res, next) => {
+  console.error("GLOBAL ERROR:", err);
+
+  res.status(500).json({
+    message: "Internal Server Error",
+  });
 });
 
 export default app;

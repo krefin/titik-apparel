@@ -10,7 +10,7 @@ import { createOrder } from "../controllers/createOrderController.js";
 import { queryPayment } from "../controllers/queryPaymentController.js";
 import { cancelOrder } from "../controllers/cencelOrderController.js";
 import { refundOrder } from "../controllers/refundOrderController.js";
-import danaWebhookService from "../services/danaWebhookService.js";
+// import danaWebhookService from "../services/danaWebhookService.js";
 
 const router = express.Router();
 
@@ -42,11 +42,11 @@ router.post("/cancel-order", cancelOrder);
 router.post("/refund-order", refundOrder);
 
 // ✅ DANA Finish Notify (Webhook)
-router.post("/dana/notify", (req, res) =>
-  danaWebhookService.handleFinishNotify(req, res)
-);
-router.get("/dana/notify", (req, res) => {
-  res.status(200).send("OK");
-});
+// router.post("/dana/notify", (req, res) =>
+//   danaWebhookService.handleFinishNotify(req, res)
+// );
+// router.get("/dana/notify", (req, res) => {
+//   res.status(200).send("OK");
+// });
 
 export default router;
