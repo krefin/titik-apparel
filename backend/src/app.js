@@ -47,6 +47,7 @@ app.use(
 );
 
 app.use(helmet(helmetOptions));
+app.use("/api/payment/dana/notify", express.raw({ type: "*/*" }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use("/uploads", express.static("uploads", staticOptions));
@@ -58,5 +59,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/images", imageRoutes);
+app.get("/", (req, res) => {
+  res.status(200).send("OK");
+});
 
 export default app;

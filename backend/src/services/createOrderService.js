@@ -65,7 +65,7 @@ class DanaService {
       urlParams: [
         {
           type: "NOTIFICATION",
-          url: `${process.env.FRONTEND_URL}/finish-payment`,
+          url: `${process.env.FRONTEND_URL}/api/payment/dana/notify`,
           isDeeplink: "N",
         },
         {

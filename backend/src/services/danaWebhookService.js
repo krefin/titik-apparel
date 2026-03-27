@@ -3,85 +3,134 @@ import dotenv from "dotenv";
 dotenv.config();
 
 class DanaWebhookService {
-  constructor() {
-    // kalau nanti mau dipakai (misal verify partnerId)
-    this.partnerId = process.env.X_PARTNER_ID;
-  }
-
   async handleFinishNotify(req, res) {
-    console.log("===== FINISH NOTIFY REQUEST =====");
+    console.log("===== FINISH NOTIFY =====");
 
     try {
-      const headers = req.headers;
-      const body = req.body;
+      /**
+       * 🔍 BASIC DEBUG
+       */
+      console.log("METHOD:", req.method);
+      console.log("PATH:", req.path);
+      console.log("IS BUFFER:", Buffer.isBuffer(req.body));
 
-      console.log("Headers:");
-      console.log(JSON.stringify(headers, null, 2));
-
-      console.log("Body:");
-      console.log(JSON.stringify(body, null, 2));
-
-      const {
-        originalPartnerReferenceNo,
-        originalReferenceNo,
-        merchantId,
-        amount,
-        latestTransactionStatus,
-        transactionStatusDesc,
-        createdTime,
-        finishedTime,
-        additionalInfo,
-      } = body;
-
-      // 🔍 Validasi basic
-      if (!originalPartnerReferenceNo || !originalReferenceNo) {
+      /**
+       * ❗ VALIDASI BODY
+       */
+      if (!Buffer.isBuffer(req.body)) {
         return res.status(400).json({
           responseCode: "4000001",
-          responseMessage: "Invalid Request",
+          responseMessage: "Invalid body",
         });
       }
 
-      // 🔗 Mapping order
-      const orderId = originalPartnerReferenceNo;
-
-      console.log("===== PROCESS ORDER =====");
-      console.log("Order ID:", orderId);
-      console.log("DANA Ref:", originalReferenceNo);
-      console.log("Amount:", amount?.value, amount?.currency);
-      console.log("Status:", latestTransactionStatus);
+      /**
+       * 🔧 NORMALIZE HEADER
+       */
+      const headers = Object.fromEntries(
+        Object.entries(req.headers).map(([k, v]) => [
+          k.toLowerCase(),
+          Array.isArray(v) ? v[0] : v,
+        ])
+      );
 
       /**
-       * 💾 SIMULASI UPDATE DB
-       * (ganti sesuai database lu)
+       * 🔐 VALIDASI HEADER WAJIB
        */
-      if (latestTransactionStatus === "00") {
-        console.log("✅ PAYMENT SUCCESS");
+      if (!headers["x-signature"] || !headers["x-timestamp"]) {
+        console.error("❌ Missing signature/timestamp");
 
-        // contoh:
-        // await Order.update({
-        //   status: "PAID",
-        //   paidAt: finishedTime,
-        // });
-
-      } else if (latestTransactionStatus === "05") {
-        console.log("❌ PAYMENT EXPIRED");
-
-        // await Order.update({
-        //   status: "EXPIRED",
-        // });
-
-      } else {
-        console.log("⚠️ UNKNOWN STATUS:", latestTransactionStatus);
+        return res.status(400).json({
+          responseCode: "4000001",
+          responseMessage: "Missing signature",
+        });
       }
 
-      // ✅ response wajib ke DANA
+      /**
+       * 🔐 VALIDASI PARTNER
+       */
+      if (headers["x-partner-id"] !== process.env.X_PARTNER_ID) {
+        console.error("❌ Invalid partner");
+
+        return res.status(403).json({
+          responseCode: "4030001",
+          responseMessage: "Unauthorized",
+        });
+      }
+
+      /**
+       * 🔐 VALIDASI TIMESTAMP (ANTI REPLAY ATTACK)
+       */
+      const requestTime = new Date(headers["x-timestamp"]).getTime();
+      const now = Date.now();
+
+      const MAX_DIFF = 5 * 60 * 1000; // 5 menit
+
+      if (Math.abs(now - requestTime) > MAX_DIFF) {
+        console.error("❌ Timestamp expired");
+
+        return res.status(400).json({
+          responseCode: "4000001",
+          responseMessage: "Timestamp expired",
+        });
+      }
+
+      /**
+       * ✅ PARSE BODY
+       */
+      const bodyString = req.body.toString();
+      const data = JSON.parse(bodyString);
+
+      console.log("===== DATA =====");
+      console.log("ORDER:", data.originalPartnerReferenceNo);
+      console.log("STATUS:", data.latestTransactionStatus);
+
+      /**
+       * 🔍 VALIDASI FIELD WAJIB
+       */
+      if (!data.originalPartnerReferenceNo || !data.originalReferenceNo) {
+        return res.status(400).json({
+          responseCode: "4000001",
+          responseMessage: "Invalid payload",
+        });
+      }
+
+      /**
+       * 💾 HANDLE STATUS
+       */
+      switch (data.latestTransactionStatus) {
+        case "00":
+          console.log("✅ PAYMENT SUCCESS");
+
+          // TODO:
+          // await prisma.order.update({
+          //   where: { id: data.originalPartnerReferenceNo },
+          //   data: {
+          //     status: "PAID",
+          //     paidAt: data.finishedTime,
+          //   },
+          // });
+
+          break;
+
+        case "05":
+          console.log("❌ PAYMENT EXPIRED");
+          break;
+
+        default:
+          console.log("⚠️ UNKNOWN STATUS:", data.latestTransactionStatus);
+      }
+
+      /**
+       * ✅ RESPONSE WAJIB KE DANA
+       */
       return res.status(200).json({
         responseCode: "2000000",
         responseMessage: "Success",
       });
 
     } catch (err) {
-      console.error("===== WEBHOOK ERROR =====");
+      console.error("===== ERROR =====");
       console.error(err);
 
       return res.status(500).json({

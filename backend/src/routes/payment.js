@@ -45,5 +45,8 @@ router.post("/refund-order", refundOrder);
 router.post("/dana/notify", (req, res) =>
   danaWebhookService.handleFinishNotify(req, res)
 );
+router.get("/dana/notify", (req, res) => {
+  res.status(200).send("OK");
+});
 
 export default router;
