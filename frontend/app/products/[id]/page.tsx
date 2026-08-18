@@ -239,12 +239,12 @@ export default function ProductDetailPage() {
 
             {/* Action Buttons */}
             <div className="space-y-4 pt-6 border-t border-slate-100">
-              <div className="flex items-center gap-4">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                 <Button
                   size="lg"
                   onClick={handleAddToCart}
                   variant="outline"
-                  className={`flex-1 rounded-2xl font-bold py-6 gap-2 border-2 transition-all ${
+                  className={`w-full sm:flex-1 rounded-2xl font-bold py-4 sm:py-6 text-xs sm:text-sm gap-2 border-2 transition-all ${
                     isAdded
                       ? "border-emerald-600 bg-emerald-50 text-emerald-700"
                       : "border-slate-900 text-slate-900 hover:bg-slate-900 hover:text-white"
@@ -252,11 +252,11 @@ export default function ProductDetailPage() {
                 >
                   {isAdded ? (
                     <>
-                      <Check className="w-5 h-5" /> Ditambahkan ke Keranjang
+                      <Check className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" /> Ditambahkan
                     </>
                   ) : (
                     <>
-                      <ShoppingCart className="w-5 h-5" /> + Tambah Keranjang
+                      <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" /> + Tambah Keranjang
                     </>
                   )}
                 </Button>
@@ -264,9 +264,9 @@ export default function ProductDetailPage() {
                 <Button
                   size="lg"
                   onClick={handleBuyNow}
-                  className="flex-1 rounded-2xl font-bold py-6 bg-blue-600 hover:bg-blue-500 text-white shadow-xl shadow-blue-600/30 gap-2"
+                  className="w-full sm:flex-1 rounded-2xl font-bold py-4 sm:py-6 text-xs sm:text-sm bg-blue-600 hover:bg-blue-500 text-white shadow-xl shadow-blue-600/30 gap-2"
                 >
-                  <Sparkles className="w-5 h-5" /> Beli Langsung
+                  <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" /> Beli Langsung
                 </Button>
               </div>
 

@@ -597,34 +597,36 @@ export default function CartAndCheckout() {
                     {cart.map((p) => (
                       <div
                         key={p.id}
-                        className="flex items-center gap-4 p-4 rounded-lg border"
+                        className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 rounded-2xl border border-slate-200 dark:border-slate-800"
                       >
-                        <div className="w-20 h-20 bg-slate-100 rounded-md flex items-center justify-center text-sm font-medium text-slate-500">
+                        <div className="w-20 h-20 bg-slate-100 dark:bg-slate-800 rounded-xl flex items-center justify-center text-sm font-medium text-slate-500 overflow-hidden shrink-0">
                           {p.image ? (
                             // eslint-disable-next-line @next/next/no-img-element
                             <img
                               src={buildImageUrl(p.image) ?? ""}
                               alt={p.name}
-                              className="object-cover w-full h-full rounded-md"
+                              className="object-cover w-full h-full rounded-xl"
                             />
                           ) : (
                             "Img"
                           )}
                         </div>
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between">
+                        <div className="flex-1 w-full">
+                          <div className="flex flex-wrap items-start justify-between gap-2">
                             <div>
-                              <div className="font-semibold">{p.name}</div>
-                              <div className="text-sm text-muted-foreground">
-                                {p.variant}
-                              </div>
+                              <div className="font-semibold text-sm sm:text-base text-slate-900 dark:text-white">{p.name}</div>
+                              {p.variant && (
+                                <div className="text-xs text-slate-500 dark:text-slate-400">
+                                  {p.variant}
+                                </div>
+                              )}
                             </div>
                             <div className="text-right">
-                              <div className="font-medium">
-                                {currency(p.price)}
-                              </div>
-                              <div className="text-sm text-muted-foreground">
+                              <div className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white">
                                 {currency(p.price * p.qty)}
+                              </div>
+                              <div className="text-xs text-slate-400">
+                                @{currency(p.price)}
                               </div>
                             </div>
                           </div>
@@ -730,7 +732,7 @@ export default function CartAndCheckout() {
                           }))
                         }
                       />
-                      <div className="flex gap-2">
+                      <div className="flex flex-col sm:flex-row gap-2">
                         <Input
                           placeholder="Kota / Kabupaten"
                           value={address.city}
@@ -846,11 +848,11 @@ export default function CartAndCheckout() {
                   </div>
                 </div>
 
-                <div className="mt-6 flex items-center justify-between">
-                  <Button variant="ghost" onClick={() => setView("cart")}>
+                <div className="mt-6 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                  <Button variant="ghost" onClick={() => setView("cart")} className="w-full sm:w-auto text-xs sm:text-sm">
                     Kembali ke Keranjang
                   </Button>
-                  <Button onClick={placeOrder} disabled={loading}>
+                  <Button onClick={placeOrder} disabled={loading} className="w-full sm:w-auto text-xs sm:text-sm py-3 sm:py-6 whitespace-normal text-center font-extrabold bg-blue-600 hover:bg-blue-500 text-white shadow-lg">
                     {loading
                       ? "Memproses..."
                       : `Bayar Sekarang — ${currency(total)}`}
@@ -930,7 +932,7 @@ export default function CartAndCheckout() {
                           : "COD"}
                       </Badge>
                       <Button
-                        className="w-full"
+                        className="w-full text-xs sm:text-sm py-3 whitespace-normal text-center font-extrabold bg-blue-600 hover:bg-blue-500 text-white shadow-md"
                         onClick={placeOrder}
                         disabled={loading}
                       >

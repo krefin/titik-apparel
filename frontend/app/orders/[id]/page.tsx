@@ -420,7 +420,7 @@ function OrderTimeline({ currentStatus }: { currentStatus: string }) {
               <Icon className="w-4 h-4" />
             </div>
             <span
-              className={`mt-2 text-[10px] sm:text-xs font-semibold text-center hidden sm:block max-w-[80px] ${
+              className={`mt-2 text-[9px] sm:text-xs font-semibold text-center block max-w-[55px] sm:max-w-[80px] leading-tight ${
                 isCurrent
                   ? "text-slate-900 dark:text-white font-extrabold"
                   : isPassed

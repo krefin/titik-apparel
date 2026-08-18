@@ -217,7 +217,7 @@ export default function OrdersPage() {
 
         {/* Stats Metrics Cards */}
         {orders && orders.length > 0 && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3.5">
             <StatCard
               icon={<ShoppingBag className="w-5 h-5 text-slate-600 dark:text-slate-400" />}
               label="Total Transaksi"
