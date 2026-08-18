@@ -23,13 +23,16 @@ function generateTransactionDate() {
 }
 
 class QueryPaymentService {
-  constructor() {
-    this.dana = new Dana({
-      partnerId: process.env.X_PARTNER_ID,
-      privateKey: process.env.PRIVATE_KEY,
-      origin: process.env.ORIGIN,
-      env: process.env.ENV || "sandbox",
-    });
+  getDana() {
+    if (!this.dana) {
+      this.dana = new Dana({
+        partnerId: process.env.X_PARTNER_ID || "dummy_partner_id",
+        privateKey: process.env.PRIVATE_KEY || "dummy_private_key",
+        origin: process.env.ORIGIN || "http://localhost:4000",
+        env: process.env.DANA_ENV || process.env.ENV || "sandbox",
+      });
+    }
+    return this.dana;
   }
 
   async queryPayment(partnerReferenceNo, amount) {
@@ -41,11 +44,11 @@ class QueryPaymentService {
       transactionDate: generateTransactionDate(),
 
       amount: {
-        value: amount.toFixed(2),
+        value: Number(amount).toFixed(2),
         currency: "IDR",
       },
 
-      merchantId: process.env.MERCHANT_ID,
+      merchantId: process.env.MERCHANT_ID || "dummy_merchant",
 
       externalStoreId:
         process.env.EXTERNAL_SHOP_ID || "default_external_store",
@@ -57,7 +60,7 @@ class QueryPaymentService {
     console.log(JSON.stringify(request, null, 2));
 
     try {
-      const response = await this.dana.paymentGatewayApi.queryPayment(
+      const response = await this.getDana().paymentGatewayApi.queryPayment(
         request
       );
 

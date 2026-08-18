@@ -11,35 +11,54 @@ import authRoutes from "./routes/auth.js";
 import cartRoutes from "./routes/cart.js";
 import userRoutes from "./routes/user.js";
 import imageRoutes from "./routes/image.js";
+import contactRoutes from "./routes/contact.js";
 
 import danaWebhookService from "./services/danaWebhookService.js";
+import { apiLimiter } from "./middlewares/rateLimit.js";
+import {
+  errorHandler,
+  notFoundHandler,
+} from "./middlewares/errorHandler.js";
+import { env } from "./lib/env.js";
 
 const app = express();
 
-const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || "http://localhost:3000";
+const helmetOptions = {
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  referrerPolicy: { policy: "strict-origin-when-cross-origin" },
+  hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
+  frameguard: { action: "deny" },
+  noSniff: true,
+  xssFilter: true,
+  hidePoweredBy: true,
+};
 
-/**
- * 🔐 BASIC SECURITY & CORS
- */
+const staticOptions = {
+  setHeaders: (res) => {
+    res.setHeader("Access-Control-Allow-Origin", env.clientOrigin);
+    res.setHeader("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS");
+    res.setHeader("X-Content-Type-Options", "nosniff");
+  },
+};
+
+app.disable("x-powered-by");
 app.use(cookieParser());
 
 app.use(
   cors({
-    origin: CLIENT_ORIGIN,
+    origin: env.clientOrigin,
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "Accept"],
+    allowedHeaders: ["Content-Type", "Authorization", "Accept", "x-midtrans-signature-key"],
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
   })
 );
 
-app.use(
-  helmet({
-    crossOriginResourcePolicy: { policy: "cross-origin" },
-  })
-);
+app.use(helmet(helmetOptions));
 
 /**
- * 🔥 DANA WEBHOOK (WAJIB PALING ATAS & RAW BODY)
+ * 🔥 DANA WEBHOOK (WAJIB PALING ATAS & RAW BODY SEBELUM EXPRESS.JSON)
  * ⚠️ JANGAN DIPINDAH
  */
 app.post(
@@ -52,15 +71,20 @@ app.get("/v1.0/debit/notify", (req, res) => {
 });
 
 /**
- * ❗ GLOBAL BODY PARSER (SETELAH WEBHOOK)
+ * ❗ GLOBAL BODY PARSER
  */
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+
+/**
+ * ⚡ RATE LIMITER GLOBAL UNTUK /api
+ */
+app.use("/api", apiLimiter);
 
 /**
  * 📦 STATIC FILES
  */
-app.use("/uploads", express.static("uploads"));
+app.use("/uploads", express.static("uploads", staticOptions));
 
 /**
  * 📡 API ROUTES
@@ -73,6 +97,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/images", imageRoutes);
+app.use("/api/kontak", contactRoutes);
 
 /**
  * ❤️ HEALTH CHECK
@@ -82,23 +107,9 @@ app.get("/", (req, res) => {
 });
 
 /**
- * ❌ 404 HANDLER
+ * ❌ 404 & ERROR HANDLERS
  */
-app.use((req, res) => {
-  res.status(404).json({
-    message: "Route not found",
-  });
-});
-
-/**
- * ❌ GLOBAL ERROR HANDLER
- */
-app.use((err, req, res, next) => {
-  console.error("GLOBAL ERROR:", err);
-
-  res.status(500).json({
-    message: "Internal Server Error",
-  });
-});
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 export default app;

@@ -6,7 +6,7 @@ function hash(string) {
 }
 
 // Sample keys I've generated
-const privateKey = proccs.env.PRIVATE_KEY;
+const privateKey = process.env.PRIVATE_KEY || "";
 
 //$data = '<HTTP METHOD> + ”:” + <RELATIVE PATH URL> + “:“ + LowerCase(HexEncode(SHA-256(Minify(<HTTP BODY>)))) + “:“ + <X-TIMESTAMP>';
 const path = '/v1.0/hello-world';

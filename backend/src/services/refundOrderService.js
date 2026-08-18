@@ -25,22 +25,23 @@ function generateRefundTime() {
 }
 
 class RefundOrderService {
-
-  constructor() {
-    this.dana = new Dana({
-      partnerId: process.env.X_PARTNER_ID,
-      privateKey: process.env.PRIVATE_KEY,
-      origin: process.env.ORIGIN,
-      env: process.env.DANA_ENV || "sandbox"
-    });
+  getDana() {
+    if (!this.dana) {
+      this.dana = new Dana({
+        partnerId: process.env.X_PARTNER_ID || "dummy_partner_id",
+        privateKey: process.env.PRIVATE_KEY || "dummy_private_key",
+        origin: process.env.ORIGIN || "http://localhost:4000",
+        env: process.env.DANA_ENV || process.env.ENV || "sandbox",
+      });
+    }
+    return this.dana;
   }
 
   delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   async refundOrder(partnerReferenceNo, originalReferenceNo, amount) {
-
     if (!partnerReferenceNo) {
       throw new Error("partnerReferenceNo is required");
     }
@@ -56,8 +57,7 @@ class RefundOrderService {
     const refundAmount = Number(amount).toFixed(2);
 
     const request = {
-
-      merchantId: process.env.MERCHANT_ID,
+      merchantId: process.env.MERCHANT_ID || "dummy_merchant",
 
       originalPartnerReferenceNo: partnerReferenceNo,
 
@@ -67,15 +67,14 @@ class RefundOrderService {
 
       refundAmount: {
         value: refundAmount,
-        currency: "IDR"
+        currency: "IDR",
       },
 
-      externalStoreId: process.env.EXTERNAL_SHOP_ID,
+      externalStoreId: process.env.EXTERNAL_SHOP_ID || "default_external_store",
 
       reason: "Customer refund",
 
       additionalInfo: {
-
         refundAppliedTime: generateRefundTime(),
 
         actorType: "MERCHANT",
@@ -87,31 +86,27 @@ class RefundOrderService {
             payMethod: "BALANCE",
             transAmount: {
               value: refundAmount,
-              currency: "IDR"
-            }
-          }
-        ]
-
-      }
+              currency: "IDR",
+            },
+          },
+        ],
+      },
     };
 
     console.log("===== REFUND ORDER REQUEST =====");
     console.log(JSON.stringify(request, null, 2));
 
     try {
-
       console.log("Waiting settlement (15s)...");
       await this.delay(15000);
 
-      const response = await this.dana.paymentGatewayApi.refundOrder(request);
+      const response = await this.getDana().paymentGatewayApi.refundOrder(request);
 
       console.log("===== REFUND ORDER RESPONSE =====");
       console.log(JSON.stringify(response, null, 2));
 
       return response;
-
     } catch (err) {
-
       const error = err.rawResponse || err;
 
       console.error("===== REFUND ORDER ERROR =====");
@@ -121,12 +116,11 @@ class RefundOrderService {
        * Retry sesuai guideline DANA
        */
       if (error?.responseCode === "5005801" || error?.responseCode === "2025800") {
-
         console.log("Retry refund in 5 seconds...");
 
         await this.delay(5000);
 
-        const retryResponse = await this.dana.paymentGatewayApi.refundOrder(request);
+        const retryResponse = await this.getDana().paymentGatewayApi.refundOrder(request);
 
         console.log("===== RETRY RESPONSE =====");
         console.log(JSON.stringify(retryResponse, null, 2));

@@ -24,25 +24,28 @@ function generateValidUpTo(minutes = 30) {
 }
 
 class DanaService {
-  constructor() {
-    this.dana = new Dana({
-      partnerId: process.env.X_PARTNER_ID,
-      privateKey: process.env.PRIVATE_KEY,
-      origin: process.env.ORIGIN,
-      env: process.env.ENV || "sandbox",
-    });
+  getDana() {
+    if (!this.dana) {
+      this.dana = new Dana({
+        partnerId: process.env.X_PARTNER_ID || "dummy_partner_id",
+        privateKey: process.env.PRIVATE_KEY || "dummy_private_key",
+        origin: process.env.ORIGIN || "http://localhost:4000",
+        env: process.env.DANA_ENV || process.env.ENV || "sandbox",
+      });
+    }
+    return this.dana;
   }
 
   async createOrder(amount) {
     const partnerReferenceNo = uuidv4();
 
     const request = {
-      merchantId: process.env.MERCHANT_ID,
+      merchantId: process.env.MERCHANT_ID || "dummy_merchant",
 
       partnerReferenceNo,
 
       amount: {
-        value: amount.toFixed(2),
+        value: Number(amount).toFixed(2),
         currency: "IDR",
       },
 
@@ -56,7 +59,7 @@ class DanaService {
           payMethod: "VIRTUAL_ACCOUNT",
           payOption: "VIRTUAL_ACCOUNT_BRI",
           transAmount: {
-            value: amount.toFixed(2),
+            value: Number(amount).toFixed(2),
             currency: "IDR",
           },
         },
@@ -65,12 +68,12 @@ class DanaService {
       urlParams: [
         {
           type: "NOTIFICATION",
-          url: `${process.env.FRONTEND_URL}/v1.0/debit/notify`,
+          url: `${process.env.FRONTEND_URL || "http://localhost:3000"}/v1.0/debit/notify`,
           isDeeplink: "N",
         },
         {
           type: "PAY_RETURN",
-          url: `${process.env.FRONTEND_URL}/payment-result`,
+          url: `${process.env.FRONTEND_URL || "http://localhost:3000"}/payment-result`,
           isDeeplink: "N",
         },
       ],
@@ -97,7 +100,7 @@ class DanaService {
               quantity: "1",
               unit: "PCS",
               price: {
-                value: amount.toFixed(2),
+                value: Number(amount).toFixed(2),
                 currency: "IDR",
               },
             },
@@ -116,7 +119,7 @@ class DanaService {
     console.log(JSON.stringify(request, null, 2));
 
     try {
-      const response = await this.dana.paymentGatewayApi.createOrder(request);
+      const response = await this.getDana().paymentGatewayApi.createOrder(request);
 
       console.log("===== DANA RESPONSE =====");
       console.log(response);
