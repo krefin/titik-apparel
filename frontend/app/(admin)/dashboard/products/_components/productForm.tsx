@@ -39,10 +39,6 @@ export default function ProductForm({
 
   /* ---------- helpers ---------- */
 
-  const normalizeUpload = (res: any) => {
-    return res?.data?.file?.filename ?? res?.data?.file?.path ?? null;
-  };
-
   function buildImageSrc(img: string | null | undefined) {
     if (!img) return null;
 
@@ -110,7 +106,8 @@ export default function ProductForm({
       }
 
       // update data TANPA image
-      const { image, ...payload } = form;
+      const payload = { ...form };
+      delete payload.image;
 
       await onSubmit(payload);
     } finally {

@@ -27,6 +27,8 @@ import {
 import { useRouter } from "next/navigation";
 import { loadMidtransSnap } from "@/lib/midtrans";
 import api from "@/lib/axios"; // axios instance (with baseURL/auth)
+import { getErrorStatus } from "@/lib/errors";
+import { useSocketContext } from "@/app/providers/SocketProvider";
 
 type Product = {
   id: number | string; // cart item id
@@ -36,6 +38,24 @@ type Product = {
   qty: number;
   variant?: string;
   image?: string;
+};
+
+type MidtransResult = {
+  transaction_status?: string;
+  transactionStatus?: string;
+  status?: string;
+  status_code?: string | number;
+  statusCode?: string | number;
+  order_id?: string;
+  orderId?: string;
+  transaction_id?: string;
+  transactionId?: string;
+  transaction?: { status?: string; id?: string };
+  gross_amount?: string | number;
+  transaction_details?: { order_id?: string; gross_amount?: string | number };
+  fraud_status?: string;
+  fraudStatus?: string;
+  [key: string]: unknown;
 };
 
 const currency = (amount: number) =>
@@ -62,28 +82,26 @@ export default function CartAndCheckout() {
 
   const [payment, setPayment] = useState<"va" | "card" | "cod">("va");
   const [courier, setCourier] = useState<string>("jne_regular");
+  const { cartUpdateTick } = useSocketContext();
 
   useEffect(() => {
     fetchCart();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [cartUpdateTick]);
 
   async function fetchCart() {
     setLoading(true);
     try {
       const res = await getCart(); // returns { data: CartItem[], total }
-      const payload = res?.data ? res.data : res;
-      const itemsRaw = payload?.data ?? payload ?? [];
-      const items = (Array.isArray(itemsRaw) ? itemsRaw : []).map(
-        (it: ApiCartItem | any) => ({
-          id: it.id,
-          productId: it.productId ?? it.product?.id ?? "",
-          name: it.name ?? it.product?.name ?? "Product",
-          price: Number(it.price ?? it.product?.price ?? 0),
-          qty: Number(it.quantity ?? it.qty ?? 1),
-          image: it.image ?? it.product?.image ?? undefined,
-        })
-      ) as Product[];
+      const itemsRaw = res?.data ?? [];
+      const items = (Array.isArray(itemsRaw) ? itemsRaw : []).map((it) => ({
+        id: it.id,
+        productId: it.productId,
+        name: it.name ?? "Product",
+        price: Number(it.price ?? 0),
+        qty: Number(it.quantity ?? 1),
+        image: it.image ?? undefined,
+      })) as Product[];
 
       setCart(items);
     } catch (err) {
@@ -156,8 +174,8 @@ export default function CartAndCheckout() {
         { withCredentials: true }
       );
       return res?.data?.data ?? res?.data ?? res ?? null;
-    } catch (err: any) {
-      console.error("updateOrderStatusApi error:", err?.response ?? err);
+    } catch (err: unknown) {
+      console.error("updateOrderStatusApi error:", err);
       throw err;
     }
   }
@@ -168,7 +186,7 @@ export default function CartAndCheckout() {
   // -----------------------
   async function sendNotificationToBackend(
     orderId: number | string,
-    midtransResult: any
+    midtransResult: MidtransResult
   ) {
     const body = {
       order_id: String(orderId),
@@ -264,11 +282,17 @@ export default function CartAndCheckout() {
         shipping,
         shipping_cost: shipping,
         courier,
-        address,
         totalPrice: roundedTotal,
         total_price: roundedTotal,
         grandTotal: roundedTotal,
         amount: roundedTotal,
+        paymentMethod: payment,
+        recipientName: address.fullName,
+        telephone: address.phone,
+        address: address.addressLine,
+        city: address.city,
+        postalCode: address.postal,
+        notes: address.notes,
       });
 
       const createData = createRes?.data ? createRes.data : createRes;
@@ -354,7 +378,7 @@ export default function CartAndCheckout() {
 
         // open Midtrans UI with direct-notify + fallback update approach
         snap.pay(snapToken, {
-          onSuccess: async (result: any) => {
+          onSuccess: async (result: MidtransResult) => {
             console.log("MIDTRANS snap.onSuccess result:", result);
 
             // tolerant parse
@@ -477,7 +501,7 @@ export default function CartAndCheckout() {
             }
           },
 
-          onPending: async (result: any) => {
+          onPending: async (result: MidtransResult) => {
             console.log("MIDTRANS snap.onPending result:", result);
 
             // For pending we still notify backend so it records pending state
@@ -497,7 +521,7 @@ export default function CartAndCheckout() {
             }
           },
 
-          onError: (result: any) => {
+          onError: (result: MidtransResult) => {
             console.error("MIDTRANS snap.onError:", result);
             alert("Pembayaran gagal. Cek console untuk detail.");
           },
@@ -523,11 +547,11 @@ export default function CartAndCheckout() {
       // final fallback: order created but no payment flow — go to order page
       alert(`Pesanan dibuat: ${order.id}`);
       router.push(`/orders`);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("placeOrder error:", err);
-      if (err?.response?.status === 401) {
+      if (getErrorStatus(err) === 401) {
         alert("Silakan login terlebih dahulu.");
-        router.push("/login");
+        router.push("/auth/user/login");
         return;
       }
       alert("Gagal membuat pesanan. Cek console.");

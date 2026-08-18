@@ -5,16 +5,33 @@ import {
   createProduct,
   updateProduct,
   deleteProduct,
-} from "../controllers/productController.js"; // sesuaikan nama
+} from "../controllers/productController.js";
 
 import { authMiddleware, isAdmin } from "../middlewares/authMiddleware.js";
+import { validate } from "../middlewares/validate.js";
+import {
+  productCreateSchema,
+  productUpdateSchema,
+} from "../utils/validators.js";
 
 const router = express.Router();
 
-router.get("/", getAllProducts); // sebelumnya getProducts
+router.get("/", getAllProducts);
 router.get("/:id", getProductById);
-router.post("/", authMiddleware, isAdmin, createProduct);
-router.put("/:id", authMiddleware, isAdmin, updateProduct);
-router.delete("/:id", authMiddleware, isAdmin, deleteProduct); // hapus endpoint delete
+router.post(
+  "/",
+  authMiddleware,
+  isAdmin,
+  validate(productCreateSchema),
+  createProduct
+);
+router.put(
+  "/:id",
+  authMiddleware,
+  isAdmin,
+  validate(productUpdateSchema),
+  updateProduct
+);
+router.delete("/:id", authMiddleware, isAdmin, deleteProduct);
 
 export default router;

@@ -5,7 +5,7 @@ import axios from "axios";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { uploadImageApi } from "@/lib/api/image";
-import { updateUserApi } from "@/lib/api/user";
+import { updateUserApi } from "@/lib/api/users";
 
 type UserProfile = {
   id: string;
@@ -98,7 +98,7 @@ export default function ProfilePage() {
         console.error("Failed to load profile:", err);
         const status = err?.response?.status;
         if (status === 401 || status === 403) {
-          router.push("/login");
+          router.push("/auth/user/login");
           return;
         }
 
@@ -223,7 +223,7 @@ export default function ProfilePage() {
 
       const status = err?.response?.status;
       if (status === 401) {
-        router.push("/login");
+        router.push("/auth/user/login");
         return;
       }
 

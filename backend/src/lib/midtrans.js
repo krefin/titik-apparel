@@ -1,9 +1,10 @@
 import midtransClient from "midtrans-client";
+import { env } from "./env.js";
 
 const snap = new midtransClient.Snap({
-  isProduction: false,
-  serverKey: process.env.MIDTRANS_SERVER_KEY,
-  clientKey: process.env.MIDTRANS_CLIENT_KEY,
+  isProduction: env.midtransIsProduction,
+  serverKey: env.midtransServerKey,
+  clientKey: env.midtransClientKey,
 });
 
 export default snap;

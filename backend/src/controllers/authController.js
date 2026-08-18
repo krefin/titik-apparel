@@ -2,29 +2,20 @@
 import prisma from "../lib/prisma.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { env } from "../lib/env.js";
 
-const JWT_SECRET = process.env.JWT_SECRET || "dev-secret"; // pastikan set di .env untuk production
-
-// cookie options — dev-friendly. Di production gunakan secure: true & sameSite: "none".
+// cookie options — secure di production (HTTPS)
 const cookieOptions = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === "production", // true di production (HTTPS)
-  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+  secure: env.isProduction,
+  sameSite: env.isProduction ? "none" : "lax",
   path: "/",
   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 hari
 };
 
-export const register = async (req, res) => {
+export const register = async (req, res, next) => {
   try {
-    const {
-      name,
-      email,
-      password,
-      role,
-      city = "",
-      postalCode = "",
-      address = "",
-    } = req.body;
+    const { name, email, password, city = "", postalCode = "", address = "", telephone = "" } = req.body;
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -33,92 +24,75 @@ export const register = async (req, res) => {
         name,
         email,
         password: hashedPassword,
-        role,
+        // role SELALU "customer" — tidak bisa dipilih lewat register
+        role: "customer",
         city,
         postalCode,
         address,
+        telephone,
       },
+      select: { id: true, name: true, email: true, role: true },
     });
 
-    return res
-      .status(201)
-      .json({ success: true, data: { id: user.id, email: user.email } });
+    return res.status(201).json({ success: true, data: user });
   } catch (err) {
-    console.error("REGISTER ERROR:", err);
-    return res
-      .status(400)
-      .json({ success: false, message: "User already exists or invalid data" });
+    if (err?.code === "P2002") {
+      return res
+        .status(409)
+        .json({ success: false, message: "Email sudah terdaftar" });
+    }
+    next(err);
   }
 };
 
-export const login = async (req, res) => {
+export const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
-
-    if (!email || !password)
-      return res
-        .status(400)
-        .json({ success: false, message: "Missing credentials" });
 
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user)
       return res
         .status(401)
-        .json({ success: false, message: "Invalid credentials" });
+        .json({ success: false, message: "Email atau password salah" });
 
     const match = await bcrypt.compare(password, user.password);
     if (!match)
       return res
         .status(401)
-        .json({ success: false, message: "Invalid credentials" });
+        .json({ success: false, message: "Email atau password salah" });
 
-    const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, {
+    const token = jwt.sign({ id: user.id, role: user.role }, env.jwtSecret, {
       expiresIn: "7d",
     });
 
-    // set token sebagai cookie httpOnly
     res.cookie("token", token, cookieOptions);
 
-    return res.json({ success: true });
+    return res.json({
+      success: true,
+      data: { id: user.id, name: user.name, email: user.email, role: user.role },
+    });
   } catch (err) {
-    console.error("LOGIN ERROR:", err);
-    return res.status(500).json({ success: false, message: "Server error" });
+    next(err);
   }
 };
 
 export const logout = async (req, res) => {
-  try {
-    res.clearCookie("token", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      path: "/",
-    });
-    return res.json({ success: true, message: "Logged out successfully" });
-  } catch (err) {
-    console.error("LOGOUT ERROR:", err);
-    return res.status(500).json({ success: false, message: "Server error" });
-  }
+  res.clearCookie("token", cookieOptions);
+  return res.json({ success: true, message: "Logged out successfully" });
 };
 
-export const me = async (req, res) => {
+export const me = async (req, res, next) => {
   try {
-    // debugging logs (bisa dihapus setelah yakin)
-    // console.log(">>> Request to /api/auth/me");
-    // console.log(">>> req.headers.cookie:", req.headers.cookie);
-    // console.log(">>> req.cookies:", req.cookies);
-
     const token = req.cookies?.token;
-    if (!token) {
-      console.log("ME: no token present in cookies");
-      return res.status(401).json({ success: false, message: "No token" });
-    }
+    if (!token)
+      return res
+        .status(401)
+        .json({ success: false, message: "No token" });
 
     let decoded;
     try {
-      decoded = jwt.verify(token, JWT_SECRET);
-    } catch (verifyErr) {
-      console.log("ME: token verify failed:", verifyErr);
+      decoded = jwt.verify(token, env.jwtSecret);
+    } catch {
       return res
         .status(401)
         .json({ success: false, message: "Invalid or expired token" });
@@ -139,16 +113,39 @@ export const me = async (req, res) => {
       },
     });
 
-    if (!user) {
-      console.log("ME: user not found for id", decoded.id);
+    if (!user)
       return res
         .status(401)
         .json({ success: false, message: "User not found" });
-    }
 
     return res.json({ success: true, data: user });
   } catch (err) {
-    console.error("ME ERROR:", err);
-    return res.status(500).json({ success: false, message: "Server error" });
+    next(err);
+  }
+};
+
+export const changePassword = async (req, res, next) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+
+    if (!user)
+      return res.status(404).json({ success: false, message: "User not found" });
+
+    const match = await bcrypt.compare(currentPassword, user.password);
+    if (!match)
+      return res
+        .status(400)
+        .json({ success: false, message: "Password saat ini salah" });
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { password: hashedPassword },
+    });
+
+    return res.json({ success: true, message: "Password berhasil diubah" });
+  } catch (err) {
+    next(err);
   }
 };

@@ -5,10 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { UserResponse } from "@/lib/api/users";
 
+type Payload = Partial<UserResponse> & { password?: string };
+
 type Props = {
   initial?: Partial<UserResponse>;
   isEdit?: boolean;
-  onSubmit: (payload: Partial<UserResponse>) => Promise<void>;
+  onSubmit: (payload: Payload) => Promise<void>;
   submitLabel: string;
 };
 
@@ -21,12 +23,13 @@ export default function UserForm({
   const [form, setForm] = useState<Partial<UserResponse>>({
     name: initial?.name ?? "",
     email: initial?.email ?? "",
-    password: initial?.password ?? "",
     role: initial?.role ?? "customer",
     address: initial?.address ?? "",
     city: initial?.city ?? "",
     postalCode: initial?.postalCode ?? "",
   });
+
+  const [password, setPassword] = useState("");
 
   const [loading, setLoading] = useState(false);
 
@@ -40,11 +43,18 @@ export default function UserForm({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    const payload = { ...form };
+    const payload: Payload = { ...form };
 
     if (isEdit) {
-      // remove email on edit to avoid updating it
+      // email tidak boleh diubah; password hanya dikirim jika diisi
       delete payload.email;
+      if (!password.trim()) {
+        delete payload.password;
+      } else {
+        payload.password = password;
+      }
+    } else {
+      payload.password = password;
     }
 
     setLoading(true);
@@ -82,14 +92,17 @@ export default function UserForm({
             Email digunakan sebagai akun login dan tidak dapat diubah
           </p>
         )}
+
         <Input
           name="password"
           type="password"
-          placeholder="Password"
-          value={form.password}
-          onChange={handleChange}
-          required
+          placeholder={isEdit ? "Password baru (opsional)" : "Password"}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required={!isEdit}
+          minLength={6}
         />
+
         <select
           name="role"
           value={form.role}

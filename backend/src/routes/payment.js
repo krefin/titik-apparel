@@ -3,30 +3,54 @@ import {
   createPaymentToken,
   paymentNotification,
 } from "../controllers/paymentController.js";
-import { authMiddleware } from "../middlewares/authMiddleware.js";
+import { authMiddleware, optionalAuthMiddleware } from "../middlewares/authMiddleware.js";
+import { validate } from "../middlewares/validate.js";
+import {
+  paymentTokenSchema,
+  paymentNotificationSchema,
+} from "../utils/validators.js";
+import { AppError } from "../middlewares/errorHandler.js";
 import prisma from "../lib/prisma.js";
 
 const router = express.Router();
-// Middleware untuk set req.order dari body.orderId
+
+// Middleware untuk memuat order + cek kepemilikan
 export const setOrderFromBody = async (req, res, next) => {
-  const { orderId } = req.body;
-  if (!orderId) return res.status(400).json({ error: "Order ID required" });
+  try {
+    const { orderId } = req.body;
+    const order = await prisma.order.findUnique({
+      where: { id: Number(orderId) },
+      include: { user: true },
+    });
 
-  const order = await prisma.order.findUnique({
-    where: { id: Number(orderId) },
-    include: { user: true },
-  });
+    if (!order) throw new AppError(404, "Order not found");
 
-  if (!order) return res.status(404).json({ error: "Order not found" });
+    // IDOR protection: hanya pemilik order atau admin yang boleh bayar order ini
+    if (order.userId !== req.user.id && req.user.role !== "admin") {
+      throw new AppError(403, "Order ini bukan milik Anda");
+    }
 
-  req.order = order;
-  next();
+    req.order = order;
+    next();
+  } catch (err) {
+    next(err);
+  }
 };
 
-// gunakan di route
-router.post("/token", authMiddleware, setOrderFromBody, createPaymentToken);
+router.post(
+  "/token",
+  authMiddleware,
+  validate(paymentTokenSchema),
+  setOrderFromBody,
+  createPaymentToken
+);
 
-// menerima callback Midtrans
-router.post("/notification", paymentNotification);
+// Menerima callback (webhook) dari Midtrans ATAU dari FE (dengan session user)
+router.post(
+  "/notification",
+  optionalAuthMiddleware,
+  validate(paymentNotificationSchema),
+  paymentNotification
+);
 
 export default router;

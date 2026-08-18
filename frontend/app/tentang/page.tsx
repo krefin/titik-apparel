@@ -33,13 +33,13 @@ export default function AboutPage() {
 
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
-                href="/shop"
+                href="/products"
                 className="inline-flex items-center px-5 py-3 rounded-md bg-sky-600 hover:bg-sky-700 text-white font-semibold shadow"
               >
                 Belanja Sekarang
               </Link>
               <Link
-                href="/contact"
+                href="/kontak"
                 className="inline-flex items-center px-5 py-3 rounded-md border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
               >
                 Hubungi Kami
@@ -149,16 +149,16 @@ export default function AboutPage() {
                   </div>
                   <div className="mt-3 flex gap-3">
                     <Link
-                      href="/shop"
+                      href="/products"
                       className="inline-flex items-center px-4 py-2 rounded-md bg-sky-600 hover:bg-sky-700 text-white"
                     >
                       Mulai Berbelanja
                     </Link>
                     <Link
-                      href="/faq"
+                      href="/kontak"
                       className="inline-flex items-center px-4 py-2 rounded-md border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200"
                     >
-                      Lihat FAQ
+                      Hubungi Kami
                     </Link>
                   </div>
                 </div>
@@ -221,16 +221,16 @@ export default function AboutPage() {
 
           <div className="flex gap-3">
             <Link
-              href="/shop"
+              href="/products"
               className="inline-flex items-center px-5 py-3 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white"
             >
               Mulai Belanja
             </Link>
             <Link
-              href="/subscribe"
+              href="/kontak"
               className="inline-flex items-center px-5 py-3 rounded-md border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200"
             >
-              Berlangganan
+              Hubungi Kami
             </Link>
           </div>
         </section>

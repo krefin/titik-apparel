@@ -1,12 +1,33 @@
 // src/controllers/orderController.js
 import * as orderService from "../services/orderService.js";
 
-// Buat order baru
 export const createOrder = async (req, res, next) => {
   try {
-    const userId = req.user.id; // diasumsikan authMiddleware sudah set req.user
-    const items = req.body.items; // [{ productId, quantity, price }]
-    const order = await orderService.createOrder({ userId, items });
+    const userId = req.user.id;
+    const {
+      items,
+      courier,
+      paymentMethod,
+      recipientName,
+      telephone,
+      address,
+      city,
+      postalCode,
+      notes,
+    } = req.body;
+
+    const order = await orderService.createOrder({
+      userId,
+      items,
+      courier,
+      paymentMethod,
+      recipientName,
+      telephone,
+      address,
+      city,
+      postalCode,
+      notes,
+    });
     res.status(201).json({ success: true, data: order });
   } catch (err) {
     next(err);
@@ -19,29 +40,25 @@ export const getAllOrders = async (req, res, next) => {
     const limit = Number(req.query.limit) || 9;
     const search = req.query.search || "";
 
-    const orders = await orderService.getAllOrders({
-      page,
-      limit,
-      search,
-    });
+    const orders = await orderService.getAllOrders({ page, limit, search });
     res.json(orders);
   } catch (err) {
     next(err);
   }
 };
 
-// Ambil semua order milik user
 export const getOrdersByUser = async (req, res, next) => {
   try {
     const userId = req.user.id;
-    const orders = await orderService.getOrdersByUser(userId);
-    res.json({ success: true, data: orders });
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 10;
+    const orders = await orderService.getOrdersByUser(userId, { page, limit });
+    res.json({ success: true, ...orders });
   } catch (err) {
     next(err);
   }
 };
 
-// Ambil detail order by id
 export const getOrderById = async (req, res, next) => {
   try {
     const order = await orderService.getOrderById(req.params.id);
@@ -49,13 +66,20 @@ export const getOrderById = async (req, res, next) => {
       return res
         .status(404)
         .json({ success: false, message: "Order not found" });
+
+    // Pemilik order atau admin
+    if (order.userId !== req.user.id && req.user.role !== "admin") {
+      return res
+        .status(403)
+        .json({ success: false, message: "Order ini bukan milik Anda" });
+    }
+
     res.json({ success: true, data: order });
   } catch (err) {
     next(err);
   }
 };
 
-// Update status order (misal admin / payment webhook)
 export const updateOrderStatus = async (req, res, next) => {
   try {
     const { status } = req.body;

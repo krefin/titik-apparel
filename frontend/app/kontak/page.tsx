@@ -2,11 +2,8 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-
-// Jika Anda menggunakan shadcn/ui, ganti elemen HTML standar dengan komponen Button/Input/Textarea
-// import { Input } from "@/components/ui/input";
-// import { Textarea } from "@/components/ui/textarea";
-// import { Button } from "@/components/ui/button";
+import api from "@/lib/axios";
+import { getErrorMessage } from "@/lib/errors";
 
 export default function ContactPage() {
   const [form, setForm] = useState({ name: "", email: "", message: "" });
@@ -38,21 +35,16 @@ export default function ContactPage() {
     try {
       setStatus("sending");
 
-      // Contoh: kirim ke API route /api/kontak (implementasikan sendiri di backend)
-      const res = await fetch("/api/kontak", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
+      const res = await api.post("/api/kontak", form);
 
-      if (!res.ok) throw new Error("Gagal mengirim pesan.");
+      if (!res.data?.success) throw new Error("Gagal mengirim pesan.");
 
       setStatus("success");
       setForm({ name: "", email: "", message: "" });
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
       setStatus("error");
-      setError(err?.message ?? "Terjadi kesalahan saat mengirim pesan.");
+      setError(getErrorMessage(err, "Terjadi kesalahan saat mengirim pesan."));
     }
   }
 
@@ -113,10 +105,10 @@ export default function ContactPage() {
 
             <div className="mt-auto">
               <Link
-                href="/faq"
+                href="/tentang"
                 className="inline-block px-4 py-2 rounded-md border border-slate-200 dark:border-slate-700 text-sm"
               >
-                FAQ & Bantuan
+                Tentang TitikApparel
               </Link>
             </div>
           </div>

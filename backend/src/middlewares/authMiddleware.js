@@ -1,12 +1,9 @@
 import jwt from "jsonwebtoken";
-
-const JWT_SECRET = process.env.JWT_SECRET || "dev-secret";
+import { env } from "../lib/env.js";
 
 export function authMiddleware(req, res, next) {
-  // Ambil token dari HttpOnly cookie
   const tokenFromCookie = req.cookies?.token;
 
-  // Fallback: Authorization header (optional)
   const authHeader = req.headers?.authorization;
   const tokenFromHeader =
     authHeader && authHeader.startsWith("Bearer ")
@@ -16,22 +13,49 @@ export function authMiddleware(req, res, next) {
   const token = tokenFromCookie || tokenFromHeader;
 
   if (!token) {
-    return res.status(401).json({ message: "Unauthorized: No token provided" });
+    return res
+      .status(401)
+      .json({ success: false, message: "Unauthorized: No token provided" });
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    req.user = decoded; // simpan user ke req
+    const decoded = jwt.verify(token, env.jwtSecret);
+    req.user = decoded;
     next();
   } catch (err) {
-    return res.status(401).json({ message: "Invalid or expired token" });
+    return res
+      .status(401)
+      .json({ success: false, message: "Invalid or expired token" });
   }
 }
 
 export function isAdmin(req, res, next) {
-  // NOTE: req.user diambil dari payload JWT (<-- pastikan JWT berisi `role`)
   if (!req.user || req.user.role !== "admin") {
-    return res.status(403).json({ message: "Forbidden: Admin only" });
+    return res
+      .status(403)
+      .json({ success: false, message: "Forbidden: Admin only" });
+  }
+  next();
+}
+
+export function optionalAuthMiddleware(req, res, next) {
+  const tokenFromCookie = req.cookies?.token;
+
+  const authHeader = req.headers?.authorization;
+  const tokenFromHeader =
+    authHeader && authHeader.startsWith("Bearer ")
+      ? authHeader.split(" ")[1]
+      : null;
+
+  const token = tokenFromCookie || tokenFromHeader;
+
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, env.jwtSecret);
+      req.user = decoded;
+    } catch {
+      /* ignore invalid token if optional */
+    }
   }
   next();
 }

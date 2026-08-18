@@ -1,10 +1,22 @@
 import app from "./app.js";
-import dotenv from "dotenv";
+import { env } from "./lib/env.js";
+import prisma from "./lib/prisma.js";
+import { initSocket } from "./lib/socket.js";
 
-dotenv.config();
-
-const PORT = process.env.PORT || 4000;
-
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+const server = app.listen(env.port, () => {
+  console.log(`Server running on http://localhost:${env.port}`);
 });
+
+initSocket(server);
+
+// Graceful shutdown
+const shutdown = async (signal) => {
+  console.log(`\n${signal} received, shutting down...`);
+  server.close(async () => {
+    await prisma.$disconnect();
+    process.exit(0);
+  });
+};
+
+process.on("SIGINT", () => shutdown("SIGINT"));
+process.on("SIGTERM", () => shutdown("SIGTERM"));

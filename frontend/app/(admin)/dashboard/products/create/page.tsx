@@ -2,12 +2,12 @@
 
 import { useRouter } from "next/navigation";
 import ProductForm from "../_components/productForm";
-import { createProduct } from "@/lib/api/products";
+import { createProduct, type Product } from "@/lib/api/products";
 
 export default function CreateProductPage() {
   const router = useRouter();
 
-  async function handleCreate(data: any) {
+  async function handleCreate(data: Partial<Product>) {
     await createProduct(data);
     router.push("/dashboard/products");
   }

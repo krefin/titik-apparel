@@ -5,11 +5,13 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon src/server.js",
-    "build": "tsc",
-    "start": "node dist/server.js",
+    "start": "node src/server.js",
     "migrate": "prisma migrate dev",
     "seed": "node prisma/seed.js",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
   },
   "keywords": [],
   "author": "",
@@ -22,11 +24,13 @@
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
+    "express-rate-limit": "^8.6.2",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
     "midtrans-client": "^1.4.3",
     "multer": "^2.0.2",
     "sharp": "^0.34.5",
+    "socket.io": "^4.8.3",
     "zod": "^4.1.11"
   },
   "devDependencies": {

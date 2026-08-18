@@ -1,21 +1,19 @@
 import * as adminStatsService from "../services/adminStatsService.js";
 
-export const getStats = async (req, res) => {
+export const getStats = async (req, res, next) => {
   try {
     const stats = await adminStatsService.getTotalStats();
-    return res.json(stats);
+    return res.json({ success: true, data: stats });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: "Error fetching stats" });
+    next(error);
   }
 };
 
-export const getMonthlySales = async (req, res) => {
+export const getMonthlySales = async (req, res, next) => {
   try {
     const sales = await adminStatsService.getMonthlySalesStats();
-    return res.json(sales);
+    return res.json({ success: true, data: sales });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: "Error fetching monthly sales" });
+    next(error);
   }
 };

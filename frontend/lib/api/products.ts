@@ -1,5 +1,6 @@
 // lib/api/products.ts
 import api from "@/lib/axios";
+import { getErrorStatus } from "@/lib/errors";
 
 export type Product = {
   id: number;
@@ -11,10 +12,11 @@ export type Product = {
   image?: string;
 };
 
-type Paginated<T> = {
-  data: T[];
-  total?: number;
-  // tambahkan metadata kalau perlu: page, perPage, etc
+export type GetProductsParams = {
+  page?: number;
+  limit?: number;
+  search?: string;
+  sort?: string;
 };
 
 export async function getProducts(
@@ -39,7 +41,7 @@ export async function getProducts(
 
     // fallback aman
     return { data: [], total: 0 };
-  } catch (err) {
+  } catch (err: unknown) {
     console.error("getProducts error:", err);
     return { data: [], total: 0 };
   }
@@ -51,8 +53,8 @@ export async function getProductById(
   try {
     const res = await api.get(`/api/products/${id}`);
     return res.data?.data ?? res.data;
-  } catch (err: any) {
-    if (err.response?.status === 404) return null;
+  } catch (err: unknown) {
+    if (getErrorStatus(err) === 404) return null;
     throw err;
   }
 }

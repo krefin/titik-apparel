@@ -17,8 +17,10 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/providers/AuthProvider";
+import { getErrorMessage } from "@/lib/errors";
 
 export function LoginForm({
   className,
@@ -46,10 +48,8 @@ export function LoginForm({
       } else {
         router.push("/"); // customer and others
       }
-    } catch (error: any) {
-      setErr(
-        error?.response?.data?.message ?? error?.message ?? "Login failed"
-      );
+    } catch (error: unknown) {
+      setErr(getErrorMessage(error, "Login failed"));
     } finally {
       setLoading(false);
     }
@@ -80,15 +80,7 @@ export function LoginForm({
               </Field>
 
               <Field>
-                <div className="flex items-center">
-                  <FieldLabel htmlFor="password">Password</FieldLabel>
-                  <a
-                    href="#"
-                    className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
-                  >
-                    Forgot your password?
-                  </a>
-                </div>
+                <FieldLabel htmlFor="password">Password</FieldLabel>
                 <Input
                   id="password"
                   type="password"
@@ -102,14 +94,17 @@ export function LoginForm({
                 <Button type="submit" disabled={loading}>
                   {loading ? "Logging in..." : "Login"}
                 </Button>
-                <Button variant="outline" type="button">
-                  Login with Google
-                </Button>
 
                 {err && <p className="text-sm text-red-600 mt-2">{err}</p>}
 
                 <FieldDescription className="text-center">
-                  Don&apos;t have an account? <a href="#">Sign up</a>
+                  Don&apos;t have an account?{" "}
+                  <Link
+                    href="/auth/user/register"
+                    className="underline underline-offset-4 hover:text-primary"
+                  >
+                    Sign up
+                  </Link>
                 </FieldDescription>
               </Field>
             </FieldGroup>

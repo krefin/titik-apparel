@@ -4,7 +4,6 @@ export type UserResponse = {
   id: number;
   email: string;
   name: string;
-  password: string;
   address: string;
   city: string;
   postalCode: string;
@@ -24,7 +23,7 @@ export async function getUsersApi(params?: {
 }
 
 export async function createUserApi(payload: Partial<UserResponse>) {
-  const res = await api.post("/api/auth/register", payload);
+  const res = await api.post("/api/users", payload);
   return res.data;
 }
 

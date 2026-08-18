@@ -5,9 +5,31 @@ import Link from "next/link";
 import { getUsersApi, deleteUserApi, type UserResponse } from "@/lib/api/users";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Users,
+  Plus,
+  Search,
+  Edit,
+  Trash2,
+  ShieldCheck,
+  User as UserIcon,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import { format } from "date-fns";
+import { id as idLocale } from "date-fns/locale/id";
 
 const LIMIT = 8;
 const DEBOUNCE_MS = 400;
+
+function formatDate(dt?: string) {
+  if (!dt) return "-";
+  try {
+    return format(new Date(dt), "dd MMM yyyy", { locale: idLocale });
+  } catch {
+    return dt;
+  }
+}
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<UserResponse[]>([]);
@@ -18,7 +40,7 @@ export default function AdminUsersPage() {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
-  const totalPages = Math.ceil(total / LIMIT);
+  const totalPages = Math.max(1, Math.ceil(total / LIMIT));
 
   async function fetchUsers() {
     setLoading(true);
@@ -31,6 +53,8 @@ export default function AdminUsersPage() {
 
       setUsers(data);
       setTotal(total);
+    } catch (err) {
+      console.error("fetch users error", err);
     } finally {
       setLoading(false);
     }
@@ -49,115 +73,191 @@ export default function AdminUsersPage() {
     fetchUsers();
   }, [page, debouncedSearch]);
 
-  async function handleDelete(id: number) {
-    const ok = confirm("Delete this user?");
+  async function handleDelete(id: number, name: string) {
+    const ok = confirm(`Hapus pengguna "${name}"?`);
     if (!ok) return;
-    await deleteUserApi(id);
-    fetchUsers();
+
+    try {
+      await deleteUserApi(id);
+      fetchUsers();
+    } catch (err) {
+      alert("Gagal menghapus pengguna.");
+    }
   }
 
   return (
-    <div className="space-y-4">
-      {/* HEADER */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Users</h1>
+    <div className="space-y-6">
+      
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900">
+            <Users className="w-5 h-5" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+              Kelola Pengguna
+            </h1>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              Daftar pengguna terdaftar dan manajemen hak akses admin.
+            </p>
+          </div>
+        </div>
 
         <Link href="/dashboard/users/create">
-          <Button>Add User</Button>
+          <Button className="rounded-xl text-xs font-bold gap-2 bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 shadow-md">
+            <Plus className="w-4 h-4" /> Tambah User
+          </Button>
         </Link>
       </div>
 
-      {/* SEARCH */}
-      <div className="max-w-sm">
-        <Input
-          placeholder="Search name / email / role"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+      {/* Toolbar: Search */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="relative w-full sm:w-80">
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Input
+            placeholder="Cari nama / email / role..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9 pr-4 py-2 text-xs rounded-xl bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-2xs"
+          />
+        </div>
+
+        <div className="text-xs font-semibold text-slate-500">
+          Total: <span className="text-slate-900 dark:text-white font-extrabold">{total} User</span>
+        </div>
       </div>
 
-      {/* TABLE */}
-      <div className="overflow-x-auto border rounded-lg bg-white">
-        <table className="w-full text-sm">
-          <thead className="bg-neutral-100 border-b">
-            <tr>
-              <th className="p-3 text-left">Name</th>
-              <th className="p-3 text-left">Email</th>
-              <th className="p-3 text-left">Role</th>
-              <th className="p-3 text-left">Created</th>
-              <th className="p-3 text-right">Action</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {loading && (
+      {/* Users Table */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-3xl overflow-hidden shadow-xs">
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs text-left">
+            <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800 text-slate-400 font-extrabold uppercase tracking-wider text-[10px]">
               <tr>
-                <td colSpan={5} className="p-6 text-center">
-                  Loading...
-                </td>
+                <th className="p-4">Pengguna</th>
+                <th className="p-4">Email</th>
+                <th className="p-4">Role</th>
+                <th className="p-4">Tanggal Didaftarkan</th>
+                <th className="p-4 text-right">Aksi</th>
               </tr>
-            )}
+            </thead>
 
-            {!loading && users.length === 0 && (
-              <tr>
-                <td colSpan={5} className="p-6 text-center">
-                  No users found
-                </td>
-              </tr>
-            )}
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
+              {loading ? (
+                <tr>
+                  <td colSpan={5} className="p-8 text-center text-slate-400 font-medium">
+                    Memuat daftar pengguna...
+                  </td>
+                </tr>
+              ) : users.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="p-12 text-center text-slate-400">
+                    Tidak ada pengguna ditemukan.
+                  </td>
+                </tr>
+              ) : (
+                users.map((u) => {
+                  const isAdmin = (u.role || "").toLowerCase() === "admin";
 
-            {users.map((u) => (
-              <tr key={u.id} className="border-b hover:bg-neutral-50">
-                <td className="p-3 font-medium">{u.name}</td>
-                <td className="p-3">{u.email}</td>
-                <td className="p-3 capitalize">{u.role}</td>
-                <td className="p-3 text-gray-500">
-                  {new Date(u.createdAt).toLocaleDateString("id-ID")}
-                </td>
-                <td className="p-3 text-right space-x-2">
-                  <Link href={`/dashboard/users/${u.id}/edit`}>
-                    <Button size="sm" variant="outline">
-                      Edit
-                    </Button>
-                  </Link>
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={() => handleDelete(u.id)}
-                  >
-                    Delete
-                  </Button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                  return (
+                    <tr key={u.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
+                      {/* Name & Avatar */}
+                      <td className="p-4 font-bold text-slate-900 dark:text-white">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-black shrink-0 ${
+                            isAdmin
+                              ? "bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/30"
+                              : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
+                          }`}>
+                            {u.name ? u.name.charAt(0).toUpperCase() : "U"}
+                          </div>
+                          <div>
+                            <div>{u.name}</div>
+                            <div className="text-[10px] text-slate-400 font-normal">ID: #{u.id}</div>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Email */}
+                      <td className="p-4 font-medium text-slate-600 dark:text-slate-300">
+                        {u.email}
+                      </td>
+
+                      {/* Role Pill */}
+                      <td className="p-4">
+                        <span
+                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-extrabold border ${
+                            isAdmin
+                              ? "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20"
+                              : "bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20"
+                          }`}
+                        >
+                          {isAdmin ? <ShieldCheck className="w-3 h-3 text-sky-500" /> : <UserIcon className="w-3 h-3" />}
+                          {u.role ? u.role.toUpperCase() : "CUSTOMER"}
+                        </span>
+                      </td>
+
+                      {/* Registration Date */}
+                      <td className="p-4 text-slate-500 font-medium">
+                        {formatDate(u.createdAt)}
+                      </td>
+
+                      {/* Actions */}
+                      <td className="p-4 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <Link href={`/dashboard/users/${u.id}/edit`}>
+                            <Button size="sm" variant="outline" className="text-xs font-bold gap-1 rounded-xl">
+                              <Edit className="w-3.5 h-3.5 text-slate-500" /> Edit
+                            </Button>
+                          </Link>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleDelete(u.id, u.name)}
+                            className="text-xs font-bold gap-1 rounded-xl bg-rose-600 hover:bg-rose-700"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" /> Hapus
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      {/* PAGINATION */}
+      {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex justify-end gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={page === 1}
-            onClick={() => setPage((p) => p - 1)}
-          >
-            Prev
-          </Button>
+        <div className="flex items-center justify-between pt-2">
+          <div className="text-xs text-slate-500 font-medium">
+            Halaman <span className="font-bold text-slate-900 dark:text-white">{page}</span> dari{" "}
+            <span className="font-bold text-slate-900 dark:text-white">{totalPages}</span>
+          </div>
 
-          <span className="text-sm">
-            Page {page} of {totalPages}
-          </span>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={page === 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              className="rounded-xl text-xs font-bold gap-1"
+            >
+              <ChevronLeft className="w-4 h-4" /> Prev
+            </Button>
 
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={page === totalPages}
-            onClick={() => setPage((p) => p + 1)}
-          >
-            Next
-          </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={page === totalPages}
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              className="rounded-xl text-xs font-bold gap-1"
+            >
+              Next <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
       )}
     </div>
