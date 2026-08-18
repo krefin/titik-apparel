@@ -1,63 +1,64 @@
-# 06. Security Architecture & Best Practices
+# 06. Arsitektur Keamanan & Best Practices
 
-[Back to Documentation Index](file:///c:/Users/Alfin/Documents/NextJs/titik-apparel/docs/README.md)
+[🏠 Home Utama](../README.md) \| [📚 Docs Hub](./README.md) \| [⬅️ Kembali: 05. Panduan Frontend](./05-frontend-guide.md) \| [Lanjut: 07. Production & Operasional ➡️](./07-deployment-and-operations.md)
 
 ---
 
-## 🛡️ Security Implementation Overview
+## 🛡️ Ringkasan Arsitektur Keamanan
 
-Titik Apparel follows a **Defense-in-Depth** security design across all application layers to safeguard user data, prevent unauthorized access, and protect business transactions.
+Titik Apparel menerapkan prinsip **Defense-in-Depth** di seluruh lapisan aplikasi untuk melindungi data pengguna, mencegah akses tanpa izin, dan mengamankan transaksi bisnis.
 
 ---
 
 ## 🔒 1. Content Security Policy & HTTP Headers (`next.config.ts`)
 
-Next.js `next.config.ts` enforces strict HTTP security headers on all responses:
+Berkas `next.config.ts` menegaskan header keamanan HTTP yang ketat pada setiap respon:
 
-- `poweredByHeader: false`: Removes `X-Powered-By: Next.js` header to obscure server identity.
-- `X-Frame-Options: DENY`: Prevents Clickjacking by disallowing `iframe` embedding.
-- `X-Content-Type-Options: nosniff`: Prevents MIME-sniffing vulnerabilities.
-- `Strict-Transport-Security (HSTS)`: Enforces HTTPS connections (`max-age=63072000; includeSubDomains; preload`).
-- `Referrer-Policy: strict-origin-when-cross-origin`: Controls referrer leaks.
-- `Permissions-Policy`: Disables unused browser hardware APIs (camera, microphone, geolocation).
-- `Content-Security-Policy (CSP)`: Restricts script, style, font, image, and WebSocket connections to whitelist trusted domains (*Self, Midtrans, Unsplash, WebSocket Localhost*).
+- `poweredByHeader: false`: Menghapus header `X-Powered-By: Next.js` untuk menyembunyikan identitas teknologi server.
+- `X-Frame-Options: DENY`: Mencegah *Clickjacking* dengan melarang embedding `iframe`.
+- `X-Content-Type-Options: nosniff`: Mencegah kerentanan *MIME-sniffing*.
+- `Strict-Transport-Security (HSTS)`: Memaksa koneksi HTTPS (`max-age=63072000; includeSubDomains; preload`).
+- `Referrer-Policy: strict-origin-when-cross-origin`: Membatasi kebocoran referrer.
+- `Permissions-Policy`: Mematikan API perangkat keras browser yang tidak dipakai (kamera, mikrofon, geolokasi).
+- `Content-Security-Policy (CSP)`: Membatasi eksekusi script, gaya, font, gambar, dan WebSocket hanya dari domain terpercaya (*Self, Midtrans, DANA, Unsplash, WebSocket Localhost*).
 
 ---
 
-## 🛡️ 2. Express Server Hardening (`backend/src/app.js`)
+## 🛡️ 2. Penguatan Server Express (`backend/src/app.js`)
 
-- **Helmet Middleware**: Enforces server-side security headers (`frameguard`, `noSniff`, `xssFilter`, `hidePoweredBy`, `hsts`).
-- **Payload Limit Protection**: Restricts JSON & URL-encoded request bodies to `10mb` to mitigate Large Payload Denial of Service (DoS) attacks.
-- **Strict CORS Control**: Restricts cross-origin resource sharing strictly to `env.clientOrigin` with `credentials: true`.
+- **Helmet Middleware**: Mengunci header keamanan server-side (`frameguard`, `noSniff`, `xssFilter`, `hidePoweredBy`, `hsts`).
+- **Proteksi Payload Limit**: Membatasi JSON & URL-encoded body maksimal `10mb` untuk mencegah serangan *Large Payload DoS*.
+- **Kontrol CORS Ketat**: Mengunci akses cross-origin hanya ke `env.clientOrigin` dengan `credentials: true`.
 - **Rate Limiting (`express-rate-limit`)**:
-  - Global API Limiter: `300 requests / 15 mins` per IP.
-  - Auth Limiter: `15 requests / 15 mins` on `/api/auth/login` and `/api/auth/register` to prevent brute-force attacks.
-  - Upload Limiter: `20 uploads / 15 mins` on image upload endpoints.
+  - Global API Limiter: `300 request / 15 menit` per IP.
+  - Auth Limiter: `15 request / 15 menit` pada `/api/auth/login` dan `/api/auth/register` untuk mencegah serangan *brute-force*.
+  - Upload Limiter: `20 upload / 15 menit` pada endpoint unggah gambar.
 
 ---
 
-## 🔑 3. Authentication & Authorization
+## 🔑 3. Autentikasi & Otorisasi
 
-- **HTTP-Only Cookies**: JWT tokens are transmitted via `httpOnly: true`, `secure: true` (in production), and `sameSite: 'lax'` cookies to mitigate Cross-Site Scripting (XSS) token theft.
-- **Role-Based Access Control (RBAC)**: Protected routes verify `req.user.role === 'admin'` via `isAdmin` middleware.
-- **Data Ownership Verification (BOLA / IDOR Defense)**:
-  - Users can only read/update their own cart, profile, and orders (`order.userId === req.user.id`).
-  - Non-admin users cannot elevate privileges (e.g. `role: "admin"` is stripped on profile update).
-
----
-
-## 💳 4. Payment Integrity & Anti-Price Tampering
-
-- **SHA512 Webhook Signature Verification**: Incoming Midtrans HTTP notifications are verified against `crypto.createHash('sha512').update(order_id + status_code + gross_amount + ServerKey)`.
-- **Gross Amount Matching**: The backend checks `paidAmount === order.grandTotal`. Any price mismatch throws a `400 Bad Request` and halts order processing.
+- **HTTP-Only Cookies**: Token JWT dikirim melalui cookie `httpOnly: true`, `secure: true` (saat produksi), dan `sameSite: 'lax'` untuk mencegah pencurian token via Cross-Site Scripting (XSS).
+- **Role-Based Access Control (RBAC)**: Rute privat memverifikasi `req.user.role === 'admin'` melalui `isAdmin` middleware.
+- **Verifikasi Kepemilikan Data (Proteksi BOLA / IDOR)**:
+  - Pengguna hanya dapat membaca/mengubah keranjang, profil, dan pesanan milik sendiri (`order.userId === req.user.id`).
+  - Pengguna biasa tidak dapat menaikkan hak akses (misal: `role: "admin"` otomatis dihapus saat update profil).
 
 ---
 
-## 🧪 5. Testing & Code Quality Assurance
+## 💳 4. Integritas Pembayaran & Anti-Price Tampering
 
-- **Backend Automated Tests**: 7 Test Suites / 52 Tests covering Auth, User, Order, Cart, Product, Payment, and Admin Stats (`npm test`).
-- **Frontend Type Safety**: Strict TypeScript configuration (`npm run typecheck`) with zero implicit `any` types.
+- **Verifikasi Signature SHA512 (Midtrans)**: Webhook Midtrans diverifikasi terhadap hash `sha512(order_id + status_code + gross_amount + ServerKey)`.
+- **Verifikasi Signature DANA**: Webhook DANA diverifikasi menggunakan `WebhookParser` berbasis kunci publik RSA.
+- **Pencocokan Jumlah Tagihan**: Backend memeriksa `paidAmount === order.grandTotal`. Ketidakcocokan harga akan melempar `400 Bad Request`.
 
 ---
 
-[Next: Deployment & Operations Guide ➡️](file:///c:/Users/Alfin/Documents/NextJs/titik-apparel/docs/07-deployment-and-operations.md)
+## 🧪 5. Pengujian & Kualitas Kode (Testing)
+
+- **Automated Tests Backend**: 7 Test Suites / 52 Test Cases mencakup Auth, User, Order, Cart, Product, Payment, dan Admin Stats (`npm test`).
+- **Frontend Type Safety**: Konfigurasi TypeScript ketat (`npm run typecheck`) tanpa tipe `any` implisit.
+
+---
+
+[⬅️ Kembali: 05. Panduan Frontend](./05-frontend-guide.md) \| [📚 Docs Hub](./README.md) \| [Lanjut: 07. Production & Operasional ➡️](./07-deployment-and-operations.md)

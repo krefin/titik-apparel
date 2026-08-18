@@ -1,46 +1,46 @@
-# 01. Introduction & Overview - Titik Apparel
+# 01. Pendahuluan & Overview - Titik Apparel
 
-[Back to Documentation Index](file:///c:/Users/Alfin/Documents/NextJs/titik-apparel/docs/README.md)
-
----
-
-## 📌 About Titik Apparel
-
-**Titik Apparel** is a full-stack, modern e-commerce web application engineered for premium apparel retail. It combines an intuitive, visually rich customer shopping experience with a powerful administrative dashboard for managing products, monitoring inventory, tracking orders, and viewing real-time sales metrics.
+[🏠 Home Utama](../README.md) \| [📚 Docs Hub](./README.md) \| [⬅️ Kembali: Docs Hub](./README.md) \| [Lanjut: 02. Arsitektur Sistem ➡️](./02-architecture.md)
 
 ---
 
-## ✨ Key Features
+## 📌 Tentang Titik Apparel
 
-### 🛍️ Customer Experience
-- **Hero Showcase Carousel**: Dynamic hero section featuring high-converting product highlights and promotional banners.
-- **Product Catalog & Quick Filter**: Instant search, category filters, price sorting, and dynamic stock availability indicators.
-- **Interactive Shopping Cart**: Synchronized cart items with persistent backend state and client-side instant quantity adjustments.
-- **Seamless Midtrans Payment Checkout**: Direct Midtrans Snap modal integration supporting Credit Card, Bank Transfer (Virtual Account), Mandiri Bill, and e-Wallets (Gopay, ShopeePay, QRIS).
-- **Interactive Order Tracking Page**:
-  - Live status tracking tabs (`Semua`, `Menunggu Bayar`, `Diproses`, `Dikirim`, `Lunas`, `Selesai`, `Dibatalkan`).
-  - Visual 5-step progress bar (`OrderTimeline`): Created ➔ Paid ➔ Processing ➔ Shipped ➔ Completed.
-  - Instant payment trigger for pending orders directly from order cards.
-- **Real-Time WebSockets Notifications**: Floating toast notifications powered by Socket.IO for stock updates, cart changes, and order status transitions.
-
-### 📊 Admin Executive Dashboard
-- **Executive KPI Metrics Overview**: Live summary cards showing Total Revenue, Total Orders, Total Products, and Total Registered Users.
-- **Interactive Order Management**:
-  - Filter orders by status pills (`Menunggu`, `Diproses`, `Dikirim`, `Lunas`, `Selesai`, `Dibatalkan`).
-  - One-click status update buttons with real-time customer notification.
-  - Detailed order view with customer contact details, delivery address, shipping courier, and snapshot item prices.
-- **Product Inventory Management**: Low-stock warning pills, product thumbnail previews, search, pagination, and full CRUD operations.
-- **User Management**: User directory with role badges (`ADMIN` vs `CUSTOMER`), initial avatars, and search capability.
+**Titik Apparel** adalah aplikasi web e-commerce full-stack modern berkinerja tinggi yang dirancang khusus untuk ritel pakaian premium. Aplikasi ini menggabungkan pengalaman berbelanja pelanggan yang intuitif dan kaya secara visual dengan dashboard administratif yang andal untuk mengelola produk, memantau stok, melacak pesanan, dan melihat metrik penjualan secara real-time.
 
 ---
 
-## 🎨 Design System & Visual Aesthetics
+## ✨ Fitur Utama Platform
 
-- **Color Palette**: Curated dark slate background (`bg-slate-950`), glowing sky accent blues (`sky-500`), emerald greens for financial metrics, and amber/rose warning indicators.
-- **Glassmorphism**: Soft background blurs (`backdrop-blur-md`), subtle translucent borders (`border-white/10` / `border-slate-800`), and depth shadows.
-- **Typography**: Clean sans-serif hierarchy powered by Google Fonts (Inter / Roboto).
-- **Responsive Layout**: Mobile-first architecture featuring responsive drawer menus, sticky headers, and adaptable grid layouts.
+### 🛍️ Pengalaman Pelanggan (Customer Experience)
+- **Hero Showcase Carousel**: Seksi banner hero dinamis dengan sorotan produk unggulan dan promo terkini.
+- **Katalog Produk & Filter Cepat**: Pencarian instan, filter kategori, pengurutan harga, dan indikator ketersediaan stok real-time.
+- **Keranjang Belanja Interaktif**: Keranjang belanja tersinkronisasi otomatis dengan backend dan penyesuaian kuantitas instan.
+- **Pembayaran Midtrans & DANA**: Integrasi modal Midtrans Snap dan DANA Payment yang mendukung Kartu Kredit, Transfer Bank (Virtual Account), E-Wallet (Gopay, ShopeePay, QRIS, DANA).
+- **Pelacakan Pesanan Interaktif**:
+  - Tab status pesanan (`Semua`, `Menunggu Bayar`, `Diproses`, `Dikirim`, `Lunas`, `Selesai`, `Dibatalkan`).
+  - Bar kemajuan visual 5 tahap (`OrderTimeline`): Pesanan Dibuat ➔ Lunas ➔ Diproses ➔ Dikirim ➔ Selesai.
+  - Tombol bayar langsung untuk pesanan pending dari kartu pesanan.
+- **Notifikasi Real-Time WebSockets**: Toast notification terapung berbasis Socket.IO untuk pembaruan stok, keranjang, dan perubahan status pesanan.
+
+### 📊 Dashboard Eksekutif Admin
+- **Ringkasan Metrik KPI Eksekutif**: Kartu ringkasan live yang menampilkan Total Pendapatan, Total Pesanan, Total Produk, dan Total Pengguna Terdaftar.
+- **Manajemen Pesanan Interaktif**:
+  - Filter pesanan berdasarkan pill status (`Menunggu`, `Diproses`, `Dikirim`, `Lunas`, `Selesai`, `Dibatalkan`).
+  - Tombol ubah status sekali klik dengan notifikasi real-time ke pelanggan.
+  - Tampilan detail pesanan dengan kontak pelanggan, alamat pengiriman, kurir ekspedisi, dan snapshot harga barang.
+- **Manajemen Inventaris Produk**: Indikator peringatan stok menipis, pratinjau thumbnail produk, pencarian, paginasi, dan operasi CRUD lengkap.
+- **Manajemen Pengguna**: Direktori pengguna dengan badge peran (`ADMIN` vs `CUSTOMER`), avatar inisial, dan fitur pencarian.
 
 ---
 
-[Next: System Architecture & ERD Diagram ➡️](file:///c:/Users/Alfin/Documents/NextJs/titik-apparel/docs/02-architecture.md)
+## 🎨 Sistem Desain & Estetika Visual
+
+- **Palet Warna**: Latar belakang dark slate eksklusif (`bg-slate-950`), aksen biru sky glowing (`sky-500`), hijau emerald untuk metrik keuangan, serta warna peringatan amber dan rose.
+- **Glassmorphism**: Efek buram latar belakang yang halus (`backdrop-blur-md`), batas translusen elegan (`border-white/10` / `border-slate-800`), dan bayangan kedalaman.
+- **Tipografi**: Hirarki sans-serif bersih berbasis Google Fonts (Inter / Roboto).
+- **Tata Letak Responsif**: Arsitektur mobile-first dengan menu drawer responsif, header melayang (sticky), dan grid dinamis.
+
+---
+
+[⬅️ Kembali: Docs Hub](./README.md) \| [📚 Docs Hub](./README.md) \| [Lanjut: 02. Arsitektur Sistem ➡️](./02-architecture.md)

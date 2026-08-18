@@ -1,50 +1,50 @@
-# 05. Frontend Architecture & UI/UX Guide
+# 05. Panduan Frontend Architecture & UI/UX
 
-[Back to Documentation Index](file:///c:/Users/Alfin/Documents/NextJs/titik-apparel/docs/README.md)
-
----
-
-## 🎨 Next.js 16 App Router Structure
-
-The frontend is structured using Next.js 16 App Router with React 19 Client Components (`"use client"`) and Server Components.
-
-### Key Route Directories:
-- `frontend/app/page.tsx`: Landing page featuring Hero Carousel, Popular Products, & Brand Values.
-- `frontend/app/products/`: Catalog Grid, Category Filter Tabs, Price Sort, & Product Details (`[id]`).
-- `frontend/app/cart/`: Combined Cart & Checkout Page (`cart-and-checkout.tsx`).
-- `frontend/app/orders/`: Customer Order History list with status filters (`page.tsx`) & Order Tracking Timeline (`[id]/page.tsx`).
-- `frontend/app/(admin)/dashboard/`: Admin Dashboard layout wrapper, KPI Analytics (`page.tsx`), Orders Management (`orders/`), Products Table (`products/`), & User Directory (`users/`).
+[🏠 Home Utama](../README.md) \| [📚 Docs Hub](./README.md) \| [⬅️ Kembali: 04. Backend API](./04-backend-api.md) \| [Lanjut: 06. Keamanan & Best Practices ➡️](./06-security-and-best-practices.md)
 
 ---
 
-## ⚡ Socket.IO Real-time Integration (`SocketProvider.tsx`)
+## 🎨 Struktur Next.js 16 App Router
 
-Real-time events are managed by a centralized React Context Provider wrapped around the root layout.
+Frontend dikembangkan menggunakan arsitektur Next.js 16 App Router dengan React 19 Client Components (`"use client"`) dan Server Components.
 
-### Handled Real-Time Events:
-1. `stock_update`: Triggers dynamic stock badge refreshes across product cards.
-2. `order_status_update`: Displays a floating toast notification when an admin updates the user's order status (e.g. "Pesanan #12 dikirim").
-3. `new_order_notification`: Emits a alert toast on the Admin Dashboard topbar whenever a customer places a new order.
-4. `cart_update`: Synchronizes active cart count badges in the header navbar.
+### Direktori Rute Utama:
+- `frontend/app/page.tsx`: Halaman utama featuring Hero Carousel, Produk Populer, & Nilai Brand.
+- `frontend/app/products/`: Katalog Produk, Tab Filter Kategori, Urutkan Harga, & Detail Produk (`[id]`).
+- `frontend/app/cart/`: Halaman Kombinasi Keranjang Belanja & Form Checkout (`cart-and-checkout.tsx`).
+- `frontend/app/orders/`: Riwayat Pesanan Pelanggan dengan filter status (`page.tsx`) & Timeline Pelacakan (`[id]/page.tsx`).
+- `frontend/app/(admin)/dashboard/`: Layout wrapper Dashboard Admin, Analitik KPI (`page.tsx`), Tabel Pesanan (`orders/`), Tabel Produk (`products/`), & Direktori Pengguna (`users/`).
 
 ---
 
-## 💳 Midtrans Payment Integration (`frontend/lib/payment.ts`)
+## ⚡ Integrasi Real-Time Socket.IO (`SocketProvider.tsx`)
 
-Midtrans Snap Payment is encapsulated in `frontend/lib/payment.ts` so both customer pages (`/orders`) and admin detail pages can trigger payment popups without duplicate code.
+Event real-time dikelola secara terpusat oleh Context Provider di `app/providers/SocketProvider.tsx`.
 
-### Execution Flow:
+### Event Real-Time yang Ditangani:
+1. `stock_update`: Mengubah badge stok secara dinamis di seluruh kartu produk.
+2. `order_status_update`: Menampilkan notifikasi toast melayang saat status pesanan diubah oleh admin (misal: "Pesanan #12 dikirim").
+3. `new_order_notification`: Menampilkan toast peringatan pada topbar admin saat pelanggan membuat pesanan baru.
+4. `cart_update`: Menyinkronkan jumlah badge keranjang di navbar secara instan.
+
+---
+
+## 💳 Integrasi Pembayaran Midtrans (`frontend/lib/payment.ts`)
+
+Eksekusi Midtrans Snap dibungkus dalam modul terpusat `frontend/lib/payment.ts` agar halaman pelanggan maupun admin dapat memicu popup Snap tanpa penulisan ulang kode.
+
+### Contoh Penggunaan:
 ```typescript
 import { processOrderPayment } from "@/lib/payment";
 
-// Trigger Snap Modal for Order #12
+// Pemicu Modal Snap untuk Order #12
 await processOrderPayment(12, () => {
-  // Callback executed on successful payment completion
+  // Callback dieksekusi setelah pembayaran berhasil
   refreshOrders();
 });
 ```
 
-### Snap Script Ingestion (`app/layout.tsx`):
+### Ingestion Script Snap (`app/layout.tsx`):
 ```html
 <script
   src="https://app.sandbox.midtrans.com/snap/snap.js"
@@ -54,19 +54,19 @@ await processOrderPayment(12, () => {
 
 ---
 
-## 🖼️ Image Resolution Helper (`frontend/lib/image.ts`)
+## 🖼️ Helper Resolusi Gambar (`frontend/lib/image.ts`)
 
-To avoid Next.js Image optimization errors on external/localhost backend uploads:
+Untuk mencegah error optimasi gambar Next.js pada uploads lokal/backend eksternal:
 
 ```typescript
 import { resolveProductImage } from "@/lib/image";
 
 const { src, unoptimized } = resolveProductImage(product.image, "/placeholder.png");
 
-// In JSX:
+// Dalam JSX:
 <Image src={src} unoptimized={unoptimized} alt={product.name} width={80} height={80} />
 ```
 
 ---
 
-[Next: Security & Best Practices ➡️](file:///c:/Users/Alfin/Documents/NextJs/titik-apparel/docs/06-security-and-best-practices.md)
+[⬅️ Kembali: 04. Backend API](./04-backend-api.md) \| [📚 Docs Hub](./README.md) \| [Lanjut: 06. Keamanan & Best Practices ➡️](./06-security-and-best-practices.md)

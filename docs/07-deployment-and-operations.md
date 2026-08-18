@@ -1,18 +1,18 @@
-# 07. Production Deployment & Operations Guide
+# 07. Production Deployment & Panduan Operasional
 
-[Back to Documentation Index](file:///c:/Users/Alfin/Documents/NextJs/titik-apparel/docs/README.md)
-
----
-
-## 🚀 Production Deployment Overview
-
-To deploy **Titik Apparel** to production (e.g. VPS, Cloud Server, Vercel/DigitalOcean), follow the operational guidelines below.
+[🏠 Home Utama](../README.md) \| [📚 Docs Hub](./README.md) \| [⬅️ Kembali: 06. Keamanan & Best Practices](./06-security-and-best-practices.md) \| [Ke Docs Hub 🔝](./README.md)
 
 ---
 
-## 📦 1. Production Build Commands
+## 🚀 Overview Deployment Produksi
 
-### Backend Build & Start:
+Untuk mendeploy **Titik Apparel** ke lingkungan produksi (seperti VPS Ubuntu, DigitalOcean, AWS, atau Vercel), ikuti panduan operasional di bawah ini.
+
+---
+
+## 📦 1. Perintah Build Produksi
+
+### Build & Start Backend:
 ```bash
 cd backend
 npm install --production
@@ -20,7 +20,7 @@ npx prisma migrate deploy
 npm start
 ```
 
-### Frontend Production Build:
+### Build & Start Frontend:
 ```bash
 cd frontend
 npm install
@@ -30,11 +30,11 @@ npm run start
 
 ---
 
-## ⚙️ 2. Process Management with PM2
+## ⚙️ 2. Manajemen Proses dengan PM2
 
-Use [PM2](https://pm2.keymetrics.io/) to manage backend Node.js and Next.js cluster processes for automatic restarts and zero-downtime reloads.
+Gunakan [PM2](https://pm2.keymetrics.io/) untuk mengelola proses Node.js backend dan Next.js cluster secara otomatis dengan *zero-downtime reloads*.
 
-### `ecosystem.config.js` Example:
+### Contoh `ecosystem.config.js`:
 ```javascript
 module.exports = {
   apps: [
@@ -65,7 +65,7 @@ module.exports = {
 };
 ```
 
-#### Start PM2:
+#### Jalankan PM2:
 ```bash
 pm2 start ecosystem.config.js --env production
 pm2 save
@@ -74,13 +74,13 @@ pm2 startup
 
 ---
 
-## 🌐 3. Nginx Reverse Proxy & SSL Configuration
+## 🌐 3. Konfigurasi Nginx Reverse Proxy & SSL
 
-Configure Nginx as a reverse proxy with Let's Encrypt SSL (`certbot`) to forward incoming traffic securely.
+Gunakan Nginx sebagai reverse proxy dengan SSL Let's Encrypt (`certbot`) untuk memproksi trafik secara aman.
 
-### Nginx Site Configuration (`/etc/nginx/sites-available/titik-apparel`):
+### Konfigurasi Nginx (`/etc/nginx/sites-available/titik-apparel`):
 ```nginx
-# Redirect HTTP to HTTPS
+# Redirect HTTP ke HTTPS
 server {
     listen 80;
     server_name titikapparel.com www.titikapparel.com;
@@ -95,7 +95,7 @@ server {
     ssl_certificate /etc/letsencrypt/live/titikapparel.com/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/titikapparel.com/privkey.pem;
 
-    # Frontend App Router (Next.js)
+    # Frontend Next.js App Router
     location / {
         proxy_pass http://localhost:3000;
         proxy_http_version 1.1;
@@ -105,12 +105,22 @@ server {
         proxy_cache_bypass $http_upgrade;
     }
 
-    # Backend API Endpoints
+    # Backend Express API Endpoints
     location /api/ {
         proxy_pass http://localhost:4000/api/;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_header;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # DANA Webhook Endpoint (RAW Body)
+    location /v1.0/debit/notify {
+        proxy_pass http://localhost:4000/v1.0/debit/notify;
+        proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_header;
@@ -130,14 +140,14 @@ server {
 
 ---
 
-## 🛠️ 4. Operational Maintenance & Troubleshooting
+## 🛠️ 4. Pemeliharaan Operasional & Troubleshooting
 
-### Database Backup (MySQL):
+### Cadangkan Database (MySQL Backup):
 ```bash
 mysqldump -u root -p titik_apparel_db > backup_$(date +%F).sql
 ```
 
-### Checking Process Logs:
+### Memeriksa Log Aplikasi:
 ```bash
 pm2 logs titik-backend
 pm2 logs titik-frontend
@@ -145,4 +155,4 @@ pm2 logs titik-frontend
 
 ---
 
-[Back to Documentation Index 🔝](file:///c:/Users/Alfin/Documents/NextJs/titik-apparel/docs/README.md)
+[⬅️ Kembali: 06. Keamanan & Best Practices](./06-security-and-best-practices.md) \| [📚 Docs Hub](./README.md) \| [Ke Top Documentation Hub 🔝](./README.md)

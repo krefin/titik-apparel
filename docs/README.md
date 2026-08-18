@@ -1,49 +1,36 @@
 # 🛍️ Titik Apparel - Documentation Hub
 
-Welcome to the official documentation for **Titik Apparel**, a modern, high-performance E-Commerce platform built with Next.js 16 (App Router), React 19, Node.js Express, Prisma ORM, Socket.IO real-time notifications, and Midtrans Payment Gateway.
+[🏠 Kembali ke README Utama](../README.md)
+
+Selamat datang di **Documentation Hub** proyek **Titik Apparel**. Seluruh dokumentasi telah disusun modular dan saling terhubung dengan tombol navigasi *Previous / Next* di setiap halaman.
 
 ---
 
-## 📚 Table of Contents
+## 📚 Daftar Isi & Navigasi Modul
 
-| Section | Description | Link |
-| :--- | :--- | :--- |
-| **01. Introduction** | Overview, Key Features, Tech Stack, Design Aesthetics | [01-introduction.md](file:///c:/Users/Alfin/Documents/NextJs/titik-apparel/docs/01-introduction.md) |
-| **02. Architecture** | System Topology, Folder Structure, Mermaid Diagrams & Database ERD | [02-architecture.md](file:///c:/Users/Alfin/Documents/NextJs/titik-apparel/docs/02-architecture.md) |
-| **03. Setup & Installation** | Prerequisites, Step-by-step Installation & Environment Variables | [03-setup-and-installation.md](file:///c:/Users/Alfin/Documents/NextJs/titik-apparel/docs/03-setup-and-installation.md) |
-| **04. Backend API Reference** | Complete REST Endpoints, Zod Validation Schemas & Error Codes | [04-backend-api.md](file:///c:/Users/Alfin/Documents/NextJs/titik-apparel/docs/04-backend-api.md) |
-| **05. Frontend Guide** | App Router, Socket Provider, UI Components & Midtrans Snap Integration | [05-frontend-guide.md](file:///c:/Users/Alfin/Documents/NextJs/titik-apparel/docs/05-frontend-guide.md) |
-| **06. Security & Best Practices** | CSP, Helmet, Rate Limiting, JWT RBAC, Anti-Price Tampering & Testing | [06-security-and-best-practices.md](file:///c:/Users/Alfin/Documents/NextJs/titik-apparel/docs/06-security-and-best-practices.md) |
-| **07. Deployment & Operations** | Production Setup (PM2/Docker), Nginx Reverse Proxy, DB Maintenance | [07-deployment-and-operations.md](file:///c:/Users/Alfin/Documents/NextJs/titik-apparel/docs/07-deployment-and-operations.md) |
-
----
-
-## 🚀 Quick Tech Stack Overview
-
-### **Frontend**
-- **Framework**: Next.js 16 (App Router) & React 19
-- **Styling**: Tailwind CSS v4 + Glassmorphism & Micro-animations
-- **State & UI**: Lucide Icons, Radix UI Primitives, Custom Hooks
-- **Real-Time**: `socket.io-client` with custom toast notification provider
-- **Payment Gateway**: Midtrans Snap Integration (`processOrderPayment`)
-
-### **Backend**
-- **Runtime**: Node.js & Express.js (ES Modules)
-- **ORM & DB**: Prisma ORM with MySQL / SQLite
-- **Security**: Helmet, Express Rate Limit, Cookie-Parser, JWT, Zod Validation
-- **Real-Time**: Socket.IO server emitting stock & order updates
-- **Testing**: Jest unit & integration test suites (52 tests passed)
+| Bab | Modul Dokumentasi | Deskripsi Singkat | Tautan Langsung |
+| :---: | :--- | :--- | :---: |
+| **01** | [**Pendahuluan & Overview**](./01-introduction.md) | Fitur Utama Pelanggan & Admin, Design System & Value Proposisi | [Buka ➡️](./01-introduction.md) |
+| **02** | [**Arsitektur Sistem & Database**](./02-architecture.md) | Topologi Server, Diagram Mermaid, Structure Folder & ERD Prisma | [Buka ➡️](./02-architecture.md) |
+| **03** | [**Setup & Instalasi Environment**](./03-setup-and-installation.md) | Langkah Instalasi FE/BE, Migrasi DB, & Template `.env.example` | [Buka ➡️](./03-setup-and-installation.md) |
+| **04** | [**Backend REST API Reference**](./04-backend-api.md) | Endpoint REST API (Auth, Orders, Cart, Payment, Users, Stats) | [Buka ➡️](./04-backend-api.md) |
+| **05** | [**Panduan Frontend & Components**](./05-frontend-guide.md) | Next.js App Router, Socket Provider, & Midtrans Payment Helper | [Buka ➡️](./05-frontend-guide.md) |
+| **06** | [**Keamanan & Best Practices**](./06-security-and-best-practices.md) | Hardening CSP, Helmet, Rate Limiting, RBAC & Automated Tests | [Buka ➡️](./06-security-and-best-practices.md) |
+| **07** | [**Production Deployment & PM2**](./07-deployment-and-operations.md) | Panduan Deployment (PM2 Cluster, Nginx Proxy, SSL Let's Encrypt) | [Buka ➡️](./07-deployment-and-operations.md) |
 
 ---
 
-## ⚡ Quick Start Checklist
+## 🚀 Alur Membaca Dokumentasi (Step-by-step Flow)
 
-1. Clone repository & install dependencies in both `frontend` and `backend`.
-2. Configure `.env` in `backend/` and `.env.local` in `frontend/` using provided `.env.example` templates.
-3. Run Prisma migrations: `npx prisma migrate dev` in `backend/`.
-4. Start backend server: `npm run dev` in `backend/` (runs on `http://localhost:4000`).
-5. Start frontend dev server: `npm run dev` in `frontend/` (runs on `http://localhost:3000`).
+Untuk memahami proyek ini secara menyeluruh, disarankan membaca berurutan:
+
+1. **Memahami Proyek**: Mulai dari [01. Pendahuluan](./01-introduction.md)
+2. **Memahami Struktur**: Lanjut ke [02. Arsitektur Sistem](./02-architecture.md)
+3. **Menjalankan Proyek**: Mengikuti [03. Setup & Instalasi](./03-setup-and-installation.md)
+4. **Mengembangkan Fitur**: Mempelajari [04. Backend API](./04-backend-api.md) dan [05. Frontend Guide](./05-frontend-guide.md)
+5. **Menjaga Kualitas & Keamanan**: Memeriksa [06. Keamanan & Best Practices](./06-security-and-best-practices.md)
+6. **Mendeploy ke Production**: Membuka [07. Production Deployment](./07-deployment-and-operations.md)
 
 ---
 
-> 🔑 **Security Note**: Never commit `.env` or `.env.local` containing actual production secrets. Use the safely documented `.env.example` templates provided in `03-setup-and-installation.md`.
+[🚀 Mulai Membaca: 01. Pendahuluan & Overview ➡️](./01-introduction.md)

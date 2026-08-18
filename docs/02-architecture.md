@@ -1,12 +1,12 @@
-# 02. System Architecture & Database Schema
+# 02. Arsitektur Sistem & Database ERD
 
-[Back to Documentation Index](file:///c:/Users/Alfin/Documents/NextJs/titik-apparel/docs/README.md)
+[🏠 Home Utama](../README.md) \| [📚 Docs Hub](./README.md) \| [⬅️ Kembali: 01. Pendahuluan](./01-introduction.md) \| [Lanjut: 03. Setup & Instalasi ➡️](./03-setup-and-installation.md)
 
 ---
 
-## 🏗️ System Architecture Topology
+## 🏗️ Topologi Arsitektur Sistem
 
-The application adopts a decoupled client-server architecture. The Next.js frontend acts as the user interface layer, communicating with the Express Node.js backend via HTTP REST endpoints and persistent Socket.IO WebSocket channels.
+Aplikasi ini menggunakan arsitektur *decoupled client-server*. Frontend Next.js berfungsi sebagai lapisan antarmuka pengguna (UI), berkomunikasi dengan backend Express Node.js melalui endpoint REST HTTP dan saluran persistent Socket.IO WebSocket.
 
 ```mermaid
 graph TD
@@ -17,6 +17,7 @@ graph TD
     MySQLDB[(🛢️ MySQL / SQLite Database)]
     SocketIO["⚡ Socket.IO Engine"]
     Midtrans["💳 Midtrans Payment Gateway"]
+    DanaPay["📱 DANA Payment Gateway"]
 
     Client -->|HTTP / React UI| NextFS
     NextFS -->|Proxy Rewrites / API Axios| ExpressBE
@@ -25,29 +26,30 @@ graph TD
     ExpressBE -->|Queries| PrismaORM
     PrismaORM -->|CRUD| MySQLDB
     ExpressBE <-->|Snap Token & Webhook SHA512| Midtrans
+    ExpressBE <-->|OAuth & Webhook RAW Body| DanaPay
     Client <-->|Snap.js Payment Modal| Midtrans
 ```
 
 ---
 
-## 📂 Directory Structure Overview
+## 📂 Struktur Direktori Proyek
 
 ### Backend Structure (`backend/`)
 ```
 backend/
 ├── prisma/
-│   └── schema.prisma         # Database models & relationships
+│   └── schema.prisma         # Model database Prisma & relasi
 ├── src/
-│   ├── app.js                # Express app setup, Security Headers, CORS, Rate Limiters
+│   ├── app.js                # Setup Express app, Security Headers, CORS, DANA Webhook, Rate Limiters
 │   ├── server.js             # HTTP server & Socket.IO listener initialization
-│   ├── controllers/          # Business logic handlers (Auth, Cart, Order, Payment, Product, User, etc.)
+│   ├── controllers/          # Business logic handlers (Auth, Cart, Order, Payment, Product, User, Dana, etc.)
 │   ├── lib/                  # Singletons (Prisma client, Midtrans snap, Socket.IO instance, env parser)
 │   ├── middlewares/          # Security middlewares (Auth, Role check, Zod validation, Error handler, Rate limit)
-│   ├── routes/               # Express router modules
+│   ├── routes/               # Express router modules (auth, product, order, payment, cart, user, contact)
 │   ├── services/             # Core service layers & database transactions
-│   ├── tests/                # Jest automated test suites
+│   ├── tests/                # Jest automated test suites (52 test cases)
 │   └── utils/                # Validators (Zod schemas) & helper utilities
-└── uploads/                  # Uploaded product & user images storage
+└── uploads/                  # Storage gambar produk & user
 ```
 
 ### Frontend Structure (`frontend/`)
@@ -55,7 +57,7 @@ backend/
 frontend/
 ├── app/                      # Next.js App Router routes & pages
 │   ├── (admin)/              # Admin Dashboard layout & pages (/dashboard, /orders, /products, /users)
-│   ├── cart/                 # Cart & checkout page
+│   ├── cart/                 # Cart & checkout page (cart-and-checkout.tsx)
 │   ├── login/ & register/    # Authentication pages
 │   ├── orders/               # Customer order list & order tracking page ([id])
 │   ├── products/             # Product catalog & product detail page ([id])
@@ -157,4 +159,4 @@ erDiagram
 
 ---
 
-[Next: Setup & Installation Guide ➡️](file:///c:/Users/Alfin/Documents/NextJs/titik-apparel/docs/03-setup-and-installation.md)
+[⬅️ Kembali: 01. Pendahuluan](./01-introduction.md) \| [📚 Docs Hub](./README.md) \| [Lanjut: 03. Setup & Instalasi ➡️](./03-setup-and-installation.md)

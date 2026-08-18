@@ -1,23 +1,23 @@
 # 04. Backend REST API Reference
 
-[Back to Documentation Index](file:///c:/Users/Alfin/Documents/NextJs/titik-apparel/docs/README.md)
+[🏠 Home Utama](../README.md) \| [📚 Docs Hub](./README.md) \| [⬅️ Kembali: 03. Setup & Instalasi](./03-setup-and-installation.md) \| [Lanjut: 05. Panduan Frontend ➡️](./05-frontend-guide.md)
 
 ---
 
-## 🔐 Authentication Headers
+## 🔐 Header Autentikasi API
 
-For authenticated endpoints, send either:
-1. **HTTP-Only Cookie**: `token=<jwt_token>` (set automatically upon login)
-2. **Bearer Header**: `Authorization: Bearer <jwt_token>`
+Untuk endpoint privat yang membutuhkan autentikasi, sertakan salah satu dari:
+1. **HTTP-Only Cookie**: `token=<jwt_token>` (tersimpan otomatis saat login)
+2. **Authorization Header**: `Authorization: Bearer <jwt_token>`
 
 ---
 
-## 🔑 1. Authentication API (`/api/auth`)
+## 🔑 1. Autentikasi API (`/api/auth`)
 
 ### `POST /api/auth/register`
-- **Rate Limit**: 15 requests / 15 mins
-- **Auth**: Public
-- **Request Body**:
+- **Rate Limit**: 15 request / 15 menit
+- **Akses**: Publik
+- **Body Request**:
   ```json
   {
     "name": "Budi Santoso",
@@ -29,7 +29,7 @@ For authenticated endpoints, send either:
     "postalCode": "12110"
   }
   ```
-- **Response (201 Created)**:
+- **Respons (201 Created)**:
   ```json
   {
     "success": true,
@@ -42,41 +42,35 @@ For authenticated endpoints, send either:
   ```
 
 ### `POST /api/auth/login`
-- **Rate Limit**: 15 requests / 15 mins
-- **Auth**: Public
-- **Request Body**:
-  ```json
-  {
-    "email": "budi@example.com",
-    "password": "password123"
-  }
-  ```
-- **Response (200 OK)**: Sets HTTP-Only Cookie `token` & returns user object.
+- **Rate Limit**: 15 request / 15 menit
+- **Akses**: Publik
+- **Body Request**: `{ "email": "budi@example.com", "password": "password123" }`
+- **Respons (200 OK)**: Menyimpan HTTP-Only Cookie `token` & mengembalikan profil pengguna.
 
 ### `POST /api/auth/logout`
-- **Auth**: Public
-- **Response (200 OK)**: Clears cookie `token`.
+- **Akses**: Publik
+- **Respons (200 OK)**: Menghapus cookie `token`.
 
 ### `GET /api/auth/me`
-- **Auth**: Authenticated User
-- **Response (200 OK)**: Returns current user profile object.
+- **Akses**: Pengguna Terautentikasi
+- **Respons (200 OK)**: Mengembalikan objek profil pengguna saat ini.
 
 ---
 
-## 📦 2. Product API (`/api/products`)
+## 📦 2. Produk API (`/api/products`)
 
 ### `GET /api/products`
-- **Auth**: Public
+- **Akses**: Publik
 - **Query Params**: `search`, `category`, `sort`, `page`, `limit`
-- **Response (200 OK)**: Paginated array of products.
+- **Respons (200 OK)**: Array produk terpaginasi.
 
 ### `GET /api/products/:id`
-- **Auth**: Public
-- **Response (200 OK)**: Single product details object.
+- **Akses**: Publik
+- **Respons (200 OK)**: Objek detail produk tunggal.
 
 ### `POST /api/products`
-- **Auth**: Admin Only (`authMiddleware`, `isAdmin`)
-- **Request Body**:
+- **Akses**: Admin Sahaja (`authMiddleware`, `isAdmin`)
+- **Body Request**:
   ```json
   {
     "name": "Kaos Titik Oversize White",
@@ -86,46 +80,42 @@ For authenticated endpoints, send either:
     "image": "/uploads/product-1.jpg"
   }
   ```
-- **Response (201 Created)**: Created product object. Emits `stock_update` socket event.
+- **Respons (201 Created)**: Objek produk baru + memicu socket event `stock_update`.
 
 ### `PUT /api/products/:id`
-- **Auth**: Admin Only
-- **Response (200 OK)**: Updated product object.
+- **Akses**: Admin Sahaja
 
 ### `DELETE /api/products/:id`
-- **Auth**: Admin Only
-- **Response (200 OK)**: `{ "success": true, "message": "Product deleted" }`
+- **Akses**: Admin Sahaja
 
 ---
 
-## 🛒 3. Cart API (`/api/cart`)
+## 🛒 3. Keranjang Belanja API (`/api/cart`)
 
 ### `GET /api/cart`
-- **Auth**: Authenticated User
-- **Response (200 OK)**: Active cart object with items list.
+- **Akses**: Pengguna Terautentikasi
 
 ### `POST /api/cart`
-- **Auth**: Authenticated User
-- **Request Body**: `{ "productId": 1, "quantity": 2 }`
-- **Response (200 OK)**: Updated cart object. Emits `cart_update` socket event.
+- **Akses**: Pengguna Terautentikasi
+- **Body Request**: `{ "productId": 1, "quantity": 2 }`
+- **Respons (200 OK)**: Memicu socket event `cart_update`.
 
 ### `PUT /api/cart/:itemId`
-- **Auth**: Authenticated User
-- **Request Body**: `{ "quantity": 3 }`
+- **Akses**: Pengguna Terautentikasi
 
 ### `DELETE /api/cart/:itemId`
-- **Auth**: Authenticated User
+- **Akses**: Pengguna Terautentikasi
 
 ### `DELETE /api/cart`
-- **Auth**: Authenticated User (Clears entire cart).
+- **Akses**: Pengguna Terautentikasi (Mengosongkan seluruh keranjang).
 
 ---
 
-## 📝 4. Order API (`/api/orders`)
+## 📝 4. Pesanan API (`/api/orders`)
 
 ### `POST /api/orders`
-- **Auth**: Authenticated User
-- **Request Body**:
+- **Akses**: Pengguna Terautentikasi
+- **Body Request**:
   ```json
   {
     "items": [
@@ -141,64 +131,53 @@ For authenticated endpoints, send either:
     "notes": "Tolong dipacking rapi"
   }
   ```
-- **Response (201 Created)**: Order object created. Decrements product stock & emits `new_order_notification` to admin socket.
+- **Respons (201 Created)**: Mengurangi stok produk & mengirim `new_order_notification` ke admin via WebSocket.
 
 ### `GET /api/orders`
-- **Auth**: Authenticated User (Returns user's own orders).
+- **Akses**: Pengguna Terautentikasi (Mengembalikan daftar pesanan milik pengguna).
 
 ### `GET /api/orders/all`
-- **Auth**: Admin Only (Returns all orders with pagination & search).
+- **Akses**: Admin Sahaja (Mengembalikan seluruh pesanan dengan pencarian & filter).
 
 ### `GET /api/orders/:id`
-- **Auth**: Order Owner OR Admin Only.
+- **Akses**: Pemilik Pesanan ATAU Admin.
 
 ### `PUT /api/orders/:id/status`
-- **Auth**: Admin Only
-- **Request Body**: `{ "status": "completed" }`
-- **Allowed Statuses**: `pending`, `paid`, `process`, `processing`, `shipped`, `shipping`, `completed`, `done`, `canceled`, `cancelled`, `failed`.
-- **Response (200 OK)**: Status updated. Emits `order_status_update` socket event to the customer. Restores stock automatically if status transitions into `cancelled`/`failed`.
+- **Akses**: Admin Sahaja
+- **Body Request**: `{ "status": "completed" }`
+- **Opsi Status**: `pending`, `paid`, `process`, `processing`, `shipped`, `shipping`, `completed`, `done`, `canceled`, `cancelled`, `failed`.
+- **Respons (200 OK)**: Mengirim event WebSocket `order_status_update` ke pengguna. Stok otomatis dipulihkan jika status diubah ke `cancelled`/`failed`.
 
 ---
 
-## 💳 5. Payment API (`/api/payment`)
+## 💳 5. Pembayaran API (`/api/payment`)
 
 ### `POST /api/payment/token`
-- **Auth**: Authenticated User
-- **Request Body**: `{ "orderId": 12 }`
-- **Response (200 OK)**:
-  ```json
-  {
-    "success": true,
-    "token": "SNAP_TOKEN_STRING_FROM_MIDTRANS",
-    "redirect_url": "https://app.sandbox.midtrans.com/snap/v2/vtweb/..."
-  }
-  ```
+- **Akses**: Pengguna Terautentikasi
+- **Body Request**: `{ "orderId": 12 }`
+- **Respons (200 OK)**: Mengembalikan `token` Snap Midtrans.
 
 ### `POST /api/payment/notification`
-- **Auth**: Midtrans Webhook (Signature SHA512 verified) OR Order Owner Fallback.
-- **Request Body**: Midtrans HTTP Notification Webhook Payload.
-- **Response (200 OK)**: Updates order status to `paid` or `failed` upon SHA512 signature & gross amount verification.
+- **Akses**: Webhook Midtrans (Diverifikasi Signature SHA512) / User Fallback.
+- **Respons (200 OK)**: Mengubah status pesanan ke `paid` atau `failed` setelah verifikasi hash SHA512 & pencocokan jumlah pembayaran (`gross_amount`).
 
 ---
 
-## 📈 6. Admin Analytics API (`/api/admin/stats`)
+## 📱 6. DANA Webhook API (`/v1.0/debit/notify`)
+
+### `POST /v1.0/debit/notify`
+- **Akses**: Webhook DANA Gateway (Body bertipe `application/json` RAW Buffer)
+- **Proses**: Diverifikasi menggunakan `DANA_PUBLIC_KEY` via `dana-node/webhook/v1` `WebhookParser`.
+- **Respons (200 OK)**: `{ "responseCode": "2005600", "responseMessage": "Success" }`
+
+---
+
+## 📈 7. Statistik Admin API (`/api/admin/stats`)
 
 ### `GET /api/admin/stats`
-- **Auth**: Admin Only
-- **Response (200 OK)**:
-  ```json
-  {
-    "success": true,
-    "data": {
-      "totalRevenue": 15450000,
-      "totalOrders": 34,
-      "totalProducts": 18,
-      "totalUsers": 120,
-      "recentOrders": [...]
-    }
-  }
-  ```
+- **Akses**: Admin Sahaja
+- **Respons (200 OK)**: Mengembalikan total pendapatan, jumlah pesanan, total produk, total pengguna, dan feeds pesanan terbaru.
 
 ---
 
-[Next: Frontend Architecture Guide ➡️](file:///c:/Users/Alfin/Documents/NextJs/titik-apparel/docs/05-frontend-guide.md)
+[⬅️ Kembali: 03. Setup & Instalasi](./03-setup-and-installation.md) \| [📚 Docs Hub](./README.md) \| [Lanjut: 05. Panduan Frontend ➡️](./05-frontend-guide.md)

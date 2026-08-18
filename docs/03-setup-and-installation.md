@@ -1,23 +1,23 @@
-# 03. Setup & Installation Guide
+# 03. Setup & Panduan Instalasi Environment
 
-[Back to Documentation Index](file:///c:/Users/Alfin/Documents/NextJs/titik-apparel/docs/README.md)
-
----
-
-## 📋 Prerequisites
-
-Before setting up **Titik Apparel**, ensure you have installed the following software on your environment:
-
-- **Node.js**: `v18.x` or `v20.x` (LTS recommended)
-- **npm**: `v9.x` or `v10.x`
-- **Database**: MySQL `8.0+` (or MariaDB / SQLite)
-- **Git**: Installed for version control
+[🏠 Home Utama](../README.md) \| [📚 Docs Hub](./README.md) \| [⬅️ Kembali: 02. Arsitektur Sistem](./02-architecture.md) \| [Lanjut: 04. Backend API Reference ➡️](./04-backend-api.md)
 
 ---
 
-## 🛠️ Step-by-Step Installation
+## 📋 Prasyarat Sistem (Prerequisites)
 
-### Step 1: Clone Repository
+Sebelum menginstall **Titik Apparel**, pastikan perangkat lunak berikut telah terinstal pada lingkungan Anda:
+
+- **Node.js**: `v18.x` atau `v20.x` (LTS sangat direkomendasikan)
+- **npm**: `v9.x` atau `v10.x`
+- **Database**: MySQL `8.0+` (atau MariaDB / SQLite)
+- **Git**: Terinstal untuk manajemen kode
+
+---
+
+## 🛠️ Langkah-Langkah Instalasi
+
+### Langkah 1: Kloning Repositori
 ```bash
 git clone https://github.com/your-username/titik-apparel.git
 cd titik-apparel
@@ -25,110 +25,118 @@ cd titik-apparel
 
 ---
 
-### Step 2: Backend Setup (`backend/`)
+### Langkah 2: Setup Backend (`backend/`)
 
-1. Navigate to the backend directory:
+1. Masuk ke direktori backend:
    ```bash
    cd backend
    ```
 
-2. Install dependencies:
+2. Install dependensi package:
    ```bash
    npm install
    ```
 
-3. Create `.env` file from the example template below:
+3. Buat berkas `.env` dari template contoh berikut:
    ```bash
    cp env.example .env
    ```
 
-#### 🔒 Backend `.env.example` Template
+#### 🔒 Template `.env.example` Backend (Aman & Bebas Leak)
 ```env
-# Server Configuration
+# Konfigurasi Server
 PORT=4000
 NODE_ENV=development
 CLIENT_ORIGIN=http://localhost:3000
 
-# Database Connection (MySQL / MariaDB / SQLite)
+# Kinetik Database Connection (MySQL / MariaDB / SQLite)
 DATABASE_URL="mysql://root:your_password@localhost:3306/titik_apparel_db"
 
-# JWT Authentication Secret
+# Rahasia Autentikasi JWT (Minimal 32 Karakter)
 JWT_SECRET="your_super_secret_jwt_key_here_min_32_chars"
 
-# Midtrans Payment Gateway Configuration
+# Konfigurasi Payment Gateway Midtrans
 MIDTRANS_SERVER_KEY="SB-Mid-server-YOUR_SANDBOX_SERVER_KEY"
 MIDTRANS_CLIENT_KEY="SB-Mid-client-YOUR_SANDBOX_CLIENT_KEY"
 MIDTRANS_IS_PRODUCTION=false
+
+# Konfigurasi Payment Gateway DANA (Sandbox)
+MERCHANT_ID="Dana_merchant_ID_example"
+X_PARTNER_ID="Dana_Client_ID_example"
+PRIVATE_KEY="Dana_Private_Key_example"
+DANA_PUBLIC_KEY="Dana_Public_Key_example"
+DANA_ENV=sandbox
+FRONTEND_URL=http://localhost:3000
 ```
 
-4. Run Prisma Database Migrations:
+4. Jalankan Migrasi Database Prisma:
    ```bash
    npx prisma migrate dev --name init
    ```
 
-5. (Optional) Seed initial Database / Admin Account:
+5. (Opsional) Seed Data Awal Admin & Produk:
    ```bash
    npx prisma db seed
    ```
 
-6. Start Backend Development Server:
+6. Jalankan Server Development Backend:
    ```bash
    npm run dev
    ```
-   *The backend API server will start on `http://localhost:4000`.*
+   *Server backend API akan aktif di `http://localhost:4000`.*
 
 ---
 
-### Step 3: Frontend Setup (`frontend/`)
+### Langkah 3: Setup Frontend (`frontend/`)
 
-1. Open a new terminal and navigate to the frontend directory:
+1. Buka terminal baru dan masuk ke direktori frontend:
    ```bash
    cd frontend
    ```
 
-2. Install dependencies:
+2. Install dependensi package:
    ```bash
    npm install
    ```
 
-3. Create `.env.local` file from the example template below:
+3. Buat berkas `.env.local` dari template contoh berikut:
 
-#### 🔒 Frontend `.env.local.example` Template
+#### 🔒 Template `.env.local.example` Frontend (Aman & Bebas Leak)
 ```env
-# Public Next.js API Base URL & WebSocket Host
+# URL API Backend & Server WebSockets
 NEXT_PUBLIC_API_URL=http://localhost:4000
 NEXT_PUBLIC_SOCKET_URL=http://localhost:4000
 
-# Public Midtrans Client Key for Client-side Snap Modal
+# Client Key Midtrans untuk Client-side Snap Modal
 NEXT_PUBLIC_MIDTRANS_CLIENT_KEY=SB-Mid-client-YOUR_SANDBOX_CLIENT_KEY
 ```
 
-4. Start Frontend Development Server:
+4. Jalankan Server Development Frontend:
    ```bash
    npm run dev
    ```
-   *The Next.js frontend application will start on `http://localhost:3000`.*
+   *Aplikasi frontend Next.js akan aktif di `http://localhost:3000`.*
 
 ---
 
-## 🧪 Verifying Setup & Automated Tests
+## 🧪 Verifikasi Instalasi & Automated Tests
 
-To ensure your installation is fully functional, run the built-in automated test suites:
+Untuk memastikan seluruh komponen berjalan sempurna tanpa masalah, jalankan suite pengujian otomatis:
 
-### 1. Run Backend Jest Unit & Integration Tests:
+### 1. Jalankan Unit & Integration Test Backend:
 ```bash
 cd backend
 npm test
 ```
-*Expected Output: `7 passed, 7 total` test suites (52 tests passed).*
+*Hasil yang Diharapkan: `7 passed, 7 total` test suites (52 tests passed).*
 
-### 2. Run Frontend TypeScript Type Check:
+### 2. Jalankan TypeScript Type Check Frontend:
 ```bash
 cd frontend
 npm run typecheck
 ```
-*Expected Output: `0 errors`.*
+*Hasil yang Diharapkan: `0 errors`.*
 
 ---
 
-[Next: Backend API Reference ➡️](file:///c:/Users/Alfin/Documents/NextJs/titik-apparel/docs/04-backend-api.md)
+[⬅️ Kembali: 02. Arsitektur Sistem](./02-architecture.md) \| [📚 Docs Hub](./README.md) \| [Lanjut: 04. Backend API Reference ➡️](./04-backend-api.md)
